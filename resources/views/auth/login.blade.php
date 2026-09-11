@@ -74,6 +74,12 @@
         </form>
 
         <hr class="my-4">
+        <div class="small text-secondary">
+            <p class="fw-semibold mb-2"><i class="bi bi-info-circle me-1"></i>Jenis Akun:</p>
+            <p class="mb-1"><span class="badge bg-danger">Administrator</span> Memantau seluruh kinerja Pokja, peta kegiatan, dan laporan.</p>
+            <p class="mb-0"><span class="badge bg-primary">Pokja</span> Mengelola progres pekerjaan panitia pada dasbor masing-masing.</p>
+        </div>
+        <hr class="my-4">
         <p class="text-center text-secondary small mb-0">
             <i class="bi bi-shield-lock me-1"></i>
             Sistem Monitoring Pengadaan Barang/Jasa

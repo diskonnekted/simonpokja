@@ -200,5 +200,9 @@ class DatabaseSeeder extends Seeder
         // ===== POKJA / MONITORING KINERJA =====
         $this->call(PokjaSeeder::class);
         $this->call(SimulasiKinerjaSeeder::class);
+        // ===== PETA: koordinat & wilayah semua paket =====
+        $this->call(PetaLokasiSeeder::class);
+        // ===== AKUN LOGIN (admin + 5 pokja) & riwayat progres =====
+        $this->call(UserSeeder::class);
     }
 }

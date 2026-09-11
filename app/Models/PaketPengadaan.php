@@ -15,6 +15,7 @@ class PaketPengadaan extends Model
         'kode_paket', 'nama_paket', 'opd_id', 'penyedia_id', 'jenis', 'metode',
         'sumber_dana', 'pagu', 'hps', 'nilai_kontrak', 'tahun_anggaran', 'status',
         'progress', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'keterangan',
+        'latitude', 'longitude', 'desa', 'kecamatan',
     ];
 
     protected $casts = [
@@ -24,6 +25,8 @@ class PaketPengadaan extends Model
         'progress' => 'integer',
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     public function opd()
@@ -59,6 +62,48 @@ class PaketPengadaan extends Model
     public function evaluasis()
     {
         return $this->hasMany(Evaluasi::class, 'paket_id');
+    }
+
+    public function progresPekerjaans()
+    {
+        return $this->hasMany(ProgresPekerjaan::class, 'paket_id')->latest();
+    }
+
+    public function progresTerakhir()
+    {
+        return $this->hasOne(ProgresPekerjaan::class, 'paket_id')->latestOfMany();
+    }
+
+    // ====== Indikator Deadline ======
+
+    /**
+     * Status deadline pekerjaan dihitung dari tanggal_selesai.
+     * Ambang dari config/monitoring.php: mendesak (<=7 hari), mendekati (<=30 hari).
+     * Paket selesai/batal tidak dinilai.
+     *
+     * return: [kunci, label, kelas_badge, sisa_hari]
+     */
+    public function getStatusDeadlineAttribute(): array
+    {
+        if (! $this->tanggal_selesai || in_array($this->status, ['selesai', 'batal'])) {
+            return ['normal', 'Aman', 'success', null];
+        }
+
+        $sisa = now()->startOfDay()->diffInDays($this->tanggal_selesai->copy()->startOfDay(), false);
+
+        if ($sisa < 0) {
+            return ['lewat', 'Melampaui deadline ' . abs($sisa) . ' hari', 'danger', (int) abs($sisa)];
+        }
+
+        if ($sisa <= config('monitoring.deadline.mendesak', 7)) {
+            return ['mendesak', 'Mendesak — sisa ' . $sisa . ' hari', 'danger', (int) $sisa];
+        }
+
+        if ($sisa <= config('monitoring.deadline.mendekati', 30)) {
+            return ['mendekati', 'Mendekati deadline — sisa ' . $sisa . ' hari', 'warning', (int) $sisa];
+        }
+
+        return ['normal', 'Aman — sisa ' . $sisa . ' hari', 'success', (int) $sisa];
     }
 
     // Label metode dalam Bahasa Indonesia

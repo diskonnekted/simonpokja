@@ -92,7 +92,7 @@ class PaketController extends Controller
 
     public function show(PaketPengadaan $paket)
     {
-        $paket->load(['opd', 'penyedia', 'tahapans', 'evaluasis.penyedia']);
+        $paket->load(['opd', 'penyedia', 'tahapans', 'evaluasis.penyedia', 'pokja']);
         return view('paket.show', ['paket' => $paket]);
     }
 

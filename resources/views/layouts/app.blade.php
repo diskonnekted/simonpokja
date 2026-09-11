@@ -149,36 +149,49 @@
             </div>
         </div>
         <nav class="sidebar-nav">
-            <div class="nav-label">Monitoring Pokja</div>
-            <a href="{{ route('pokja.index') }}" class="{{ request()->routeIs('pokja.*') ? 'active' : '' }}">
-                <i class="bi bi-person-badge"></i> Kinerja Pokja
-            </a>
-            <a href="{{ route('pemantauan.index') }}" class="{{ request()->routeIs('pemantauan.*') ? 'active' : '' }}">
-                <i class="bi bi-search-heart"></i> Pemantauan
-            </a>
-            <a href="{{ route('pokja.kelola') }}" class="{{ request()->routeIs('pokja.kelola', 'pokja.create', 'pokja.edit') ? 'active' : '' }}">
-                <i class="bi bi-diagram-3"></i> Kelola Pokja
-            </a>
-            <div class="nav-label">Data Pengadaan</div>
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            <a href="{{ route('paket.index') }}" class="{{ request()->routeIs('paket.*') ? 'active' : '' }}">
-                <i class="bi bi-box-seam"></i> Paket Pengadaan
-            </a>
-            <a href="{{ route('opd.index') }}" class="{{ request()->routeIs('opd.*') ? 'active' : '' }}">
-                <i class="bi bi-building"></i> Perangkat Daerah
-            </a>
-            <a href="{{ route('penyedia.index') }}" class="{{ request()->routeIs('penyedia.*') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> Penyedia
-            </a>
-            <div class="nav-label">Laporan</div>
-            <a href="{{ route('laporan.index') }}" class="{{ request()->routeIs('laporan.*') ? 'active' : '' }}">
-                <i class="bi bi-file-earmark-bar-graph"></i> Laporan
-            </a>
-            <a href="{{ route('audit.index') }}" class="{{ request()->routeIs('audit.*') ? 'active' : '' }}">
-                <i class="bi bi-clock-history"></i> Audit Log
-            </a>
+            @if (auth()->user()?->isPokja())
+                <div class="nav-label">Panitia</div>
+                <a href="{{ route('pokja.dasbor') }}" class="{{ request()->routeIs('pokja.dasbor', 'pokja.riwayat') ? 'active' : '' }}">
+                    <i class="bi bi-speedometer2"></i> Dasbor Pokja
+                </a>
+            @elseif (auth()->user()?->isAdmin())
+                <a href="{{ route('peta.index') }}" class="{{ request()->routeIs('peta.*') ? 'active' : '' }}">
+                    <i class="bi bi-map"></i> Peta Kegiatan
+                </a>
+                <a href="{{ route('pokja.dasbor') }}" class="{{ request()->routeIs('pokja.dasbor', 'pokja.riwayat') ? 'active' : '' }}">
+                    <i class="bi bi-speedometer2"></i> Dasbor Pokja
+                </a>
+                <div class="nav-label">Monitoring Pokja</div>
+                <a href="{{ route('pokja.index') }}" class="{{ request()->routeIs('pokja.index', 'pokja.show') ? 'active' : '' }}">
+                    <i class="bi bi-person-badge"></i> Kinerja Pokja
+                </a>
+                <a href="{{ route('pemantauan.index') }}" class="{{ request()->routeIs('pemantauan.*') ? 'active' : '' }}">
+                    <i class="bi bi-search-heart"></i> Pemantauan
+                </a>
+                <a href="{{ route('pokja.kelola') }}" class="{{ request()->routeIs('pokja.kelola', 'pokja.create', 'pokja.edit') ? 'active' : '' }}">
+                    <i class="bi bi-diagram-3"></i> Kelola Pokja
+                </a>
+                <div class="nav-label">Data Pengadaan</div>
+                <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-graph-up"></i> Dashboard
+                </a>
+                <a href="{{ route('paket.index') }}" class="{{ request()->routeIs('paket.*') ? 'active' : '' }}">
+                    <i class="bi bi-box-seam"></i> Paket Pengadaan
+                </a>
+                <a href="{{ route('opd.index') }}" class="{{ request()->routeIs('opd.*') ? 'active' : '' }}">
+                    <i class="bi bi-building"></i> Perangkat Daerah
+                </a>
+                <a href="{{ route('penyedia.index') }}" class="{{ request()->routeIs('penyedia.*') ? 'active' : '' }}">
+                    <i class="bi bi-people"></i> Penyedia
+                </a>
+                <div class="nav-label">Laporan</div>
+                <a href="{{ route('laporan.index') }}" class="{{ request()->routeIs('laporan.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-bar-graph"></i> Laporan
+                </a>
+                <a href="{{ route('audit.index') }}" class="{{ request()->routeIs('audit.*') ? 'active' : '' }}">
+                    <i class="bi bi-clock-history"></i> Audit Log
+                </a>
+            @endif
         </nav>
     </aside>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -203,6 +216,15 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li><h6 class="dropdown-header">{{ auth()->user()->email ?? '' }}</h6></li>
+                    <li>
+                        <span class="dropdown-item-text small">
+                            @if (auth()->user()?->isAdmin())
+                                <span class="badge bg-danger">Administrator</span>
+                            @elseif (auth()->user()?->isPokja())
+                                <span class="badge bg-primary">Pokja {{ auth()->user()->pokja?->nama_pokja ?? auth()->user()->pokja_id }}</span>
+                            @endif
+                        </span>
+                    </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form action="{{ route('logout') }}" method="POST">

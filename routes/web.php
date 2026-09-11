@@ -10,6 +10,8 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\PokjaController;
 use App\Http\Controllers\PemantauanController;
+use App\Http\Controllers\PetaController;
+use App\Http\Controllers\PokjaDashboardController;
 
 // ================= AUTH =================
 Route::middleware('guest')->group(function () {
@@ -19,9 +21,20 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// ================= APLIKASI =================
+// ================= DASBOR POKJA (admin boleh meninjau) =================
 Route::middleware('auth')->group(function () {
+    Route::get('pokja-dasbor', [PokjaDashboardController::class, 'index'])->name('pokja.dasbor');
+    Route::get('pokja-dasbor/paket/{paket}/riwayat', [PokjaDashboardController::class, 'riwayat'])->name('pokja.riwayat');
+});
+
+// ================= APLIKASI (hanya admin) =================
+Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ===== DASBOR PETA KEGIATAN (menu teratas) =====
+    Route::get('peta-kegiatan', [PetaController::class, 'index'])->name('peta.index');
+    Route::get('api/peta/paket', [PetaController::class, 'paket'])->name('peta.api.paket');
+    Route::get('api/peta/statistik', [PetaController::class, 'statistik'])->name('peta.api.statistik');
 
     // ===== MONITORING KINERJA POKJA (Fokus Utama) =====
     Route::get('kinerja-pokja', [PokjaController::class, 'index'])->name('pokja.index');
@@ -62,4 +75,9 @@ Route::middleware('auth')->group(function () {
 
     // Audit Log
     Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
+});
+
+// ================= SIMPAN PROGRES (khusus user pokja) =================
+Route::middleware(['auth', 'role:pokja'])->group(function () {
+    Route::post('pokja-dasbor/paket/{paket}/progres', [PokjaDashboardController::class, 'simpanProgres'])->name('pokja.progres');
 });

@@ -74,6 +74,79 @@
     </div>
 </div>
 
+{{-- ===== Info Pokja Penangan ===== --}}
+@if ($paket->pokja)
+<div class="card mb-4 border-primary-subtle">
+    <div class="card-header bg-primary-subtle py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span class="fw-bold"><i class="bi bi-people-fill me-2"></i>Panitia Pengadaan: {{ $paket->pokja->nama }}</span>
+        <a href="{{ route('pokja.show', $paket->pokja) }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Lihat Kinerja Pokja
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <div class="small text-secondary mb-1">Bidang / Susunan Panitia</div>
+                <div class="fw-semibold">{{ $paket->pokja->bidang }}</div>
+                <div class="small mt-1">
+                    <i class="bi bi-person-badge me-1 text-secondary"></i>Ketua:
+                    <span class="fw-semibold">{{ $paket->pokja->ketua }}</span>
+                    @if ($paket->pokja->nip_ketua)
+                        <span class="text-secondary"> (NIP {{ $paket->pokja->nip_ketua }})</span>
+                    @endif
+                </div>
+                <div class="mt-2 d-flex flex-wrap gap-1">
+                    @forelse ($paket->pokja->anggota ?? [] as $anggota)
+                        <span class="badge bg-primary-subtle text-secondary fw-normal">{{ $anggota }}</span>
+                    @empty
+                        <span class="text-secondary small">Belum ada data anggota</span>
+                    @endforelse
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="row g-2">
+                    <div class="col-6 col-lg-3">
+                        <div class="border rounded p-2 text-center h-100">
+                            <div class="small text-secondary">Skor Risiko</div>
+                            <div class="fw-bold fs-5">{{ $paket->pokja->skor_risiko }}</div>
+                            <span class="badge text-bg-{{ $paket->pokja->warna_risiko }}">{{ $paket->pokja->label_risiko }}</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="border rounded p-2 text-center h-100">
+                            <div class="small text-secondary">Beban Aktif</div>
+                            <div class="fw-bold fs-5">{{ $paket->pokja->beban_kerja }}</div>
+                            <div class="small text-secondary">rasio {{ $paket->pokja->rasio_beban }}/{{ $paket->pokja->kapasitas_ideal }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="border rounded p-2 text-center h-100">
+                            <div class="small text-secondary">Kepatuhan SLA</div>
+                            <div class="fw-bold fs-5">{{ (int) $paket->pokja->kepatuhan_sla }}%</div>
+                            <div class="small text-secondary">jawab sanggahan</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="border rounded p-2 text-center h-100">
+                            <div class="small text-secondary">Tender Gagal</div>
+                            <div class="fw-bold fs-5">{{ $paket->pokja->tender_gagal_persen }}%</div>
+                            <div class="small text-secondary">dari paket ditangani</div>
+                        </div>
+                    </div>
+                </div>
+                @if ($paket->pokja->alert_critical > 0)
+                    <div class="alert alert-danger py-2 px-3 mt-2 mb-0 small">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Pokja ini memiliki <strong>{{ $paket->pokja->alert_critical }} alert anomali kritis</strong> aktif
+                        yang perlu perhatian pada paket-paket lainnya.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="row g-3">
     {{-- ===== Timeline Tahapan ===== --}}
     <div class="col-lg-7">
