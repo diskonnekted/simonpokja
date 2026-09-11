@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Pokja LPSE Banjarnegara</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e293b 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .brand-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: #fff;
+            margin: 0 auto;
+        }
+        .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(37,99,235,0.15); border-color: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="login-card bg-white p-4 p-md-5">
+        <div class="text-center mb-4">
+            <div class="brand-icon mb-3"><i class="bi bi-shield-check"></i></div>
+            <h4 class="fw-bold mb-1">Monitoring Pokja LPSE</h4>
+            <p class="text-secondary mb-0">Kabupaten Banjarnegara</p>
+        </div>
+
+        @if ($errors->any())
+            <div class="alert alert-danger py-2">
+                <i class="bi bi-exclamation-triangle me-1"></i>{{ $errors->first() }}
+            </div>
+        @endif
+
+        <form action="{{ route('login') }}" method="POST">
+            @csrf
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" name="email" value="{{ old('email') }}" class="form-control" placeholder="admin@banjarnegara.go.id" required autofocus>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                    <input type="password" name="password" class="form-control" placeholder="Password" required>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                    <label class="form-check-label" for="remember">Ingat saya</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-semibold py-2">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Masuk
+            </button>
+        </form>
+
+        <hr class="my-4">
+        <p class="text-center text-secondary small mb-0">
+            <i class="bi bi-shield-lock me-1"></i>
+            Sistem Monitoring Pengadaan Barang/Jasa
+        </p>
+    </div>
+</body>
+</html>
