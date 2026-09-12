@@ -40,17 +40,27 @@
     </div></div></div>
 </div>
 
-<div class="row g-3">
-    {{-- Panel filter & pencarian --}}
-    <div class="col-lg-3">
-        <div class="card mb-3">
-            <div class="card-header py-2"><i class="bi bi-funnel me-1"></i><strong>Filter &amp; Pencarian</strong></div>
-            <div class="card-body">
+{{-- Peta full-width dengan overlay --}}
+<div class="card peta-wrap">
+    <div class="card-body p-2 position-relative">
+        <div id="peta" style="height: calc(100vh - 300px); min-height: 520px; border-radius: .375rem; z-index: 1;"></div>
+
+        {{-- Tombol & panel Filter (overlay kiri-atas) --}}
+        <button id="btn-filter" type="button" class="btn btn-light btn-sm shadow-sm peta-btn peta-btn-filter">
+            <i class="bi bi-funnel me-1"></i>Filter
+            <span class="badge text-bg-primary ms-1 d-none" id="jml-aktif">0</span>
+        </button>
+        <div id="panel-filter" class="panel-overlay">
+            <div class="d-flex justify-content-between align-items-center px-3 pt-2">
+                <span class="fw-semibold small"><i class="bi bi-funnel me-1"></i>Filter &amp; Pencarian</span>
+                <button type="button" class="btn-close btn-sm" id="tutup-filter" aria-label="Tutup"></button>
+            </div>
+            <div class="px-3 pb-3 pt-2">
                 <div class="mb-2">
                     <label class="form-label small mb-1" for="cari">Pencarian</label>
                     <input type="search" id="cari" class="form-control form-control-sm"
                            placeholder="Paket, OPD, Pokja, wilayah...">
-                    <div class="list-group mt-1" id="hasil-cari" style="max-height: 180px; overflow-y: auto;"></div>
+                    <div class="list-group mt-1" id="hasil-cari" style="max-height: 150px; overflow-y: auto;"></div>
                 </div>
                 <div class="mb-2">
                     <label class="form-label small mb-1" for="f-opd">OPD</label>
@@ -96,37 +106,35 @@
             </div>
         </div>
 
-        {{-- Daftar hasil --}}
-        <div class="card">
-            <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-list-ul me-1"></i><strong>Daftar Pekerjaan</strong></span>
-                <span class="badge text-bg-primary" id="jumlah-daftar">0</span>
+        {{-- Tombol & panel Daftar Pekerjaan (overlay kiri-bawah) --}}
+        <button id="btn-daftar" type="button" class="btn btn-light btn-sm shadow-sm peta-btn peta-btn-daftar">
+            <i class="bi bi-list-ul me-1"></i>Daftar
+            <span class="badge text-bg-primary ms-1" id="jumlah-daftar">0</span>
+        </button>
+        <div id="panel-daftar" class="panel-overlay panel-daftar">
+            <div class="d-flex justify-content-between align-items-center px-3 pt-2">
+                <span class="fw-semibold small">
+                    <i class="bi bi-list-ul me-1"></i>Daftar Pekerjaan
+                    <span class="badge text-bg-secondary ms-1" id="jumlah-daftar-2">0</span>
+                </span>
+                <button type="button" class="btn-close btn-sm" id="tutup-daftar" aria-label="Tutup"></button>
             </div>
-            <div class="list-group list-group-flush" id="daftar-paket" style="max-height: 420px; overflow-y: auto;"></div>
+            <div class="list-group list-group-flush px-2 pb-2" id="daftar-paket" style="max-height: 330px; overflow-y: auto;"></div>
         </div>
-    </div>
 
-    {{-- Peta --}}
-    <div class="col-lg-9">
-        <div class="card">
-            <div class="card-body p-2 position-relative">
-                <div id="peta" style="height: 640px; border-radius: .375rem; z-index: 1;"></div>
-
-                {{-- Legend mode risiko --}}
-                <div class="peta-legend card shadow-sm">
-                    <div class="card-body py-2 px-3">
-                        <div class="small fw-semibold mb-1">Risiko Pekerjaan</div>
-                        <div class="d-flex flex-column gap-1 small">
-                            <span><span class="dot-legend" style="background:#198754"></span> Rendah</span>
-                            <span><span class="dot-legend" style="background:#f0ad4e"></span> Sedang</span>
-                            <span><span class="dot-legend" style="background:#dc3545"></span> Kritis</span>
-                        </div>
-                        <hr class="my-2">
-                        <div class="d-flex flex-column gap-1 small">
-                            <span><i class="bi bi-geo-alt-fill text-danger"></i> Tender gagal</span>
-                            <span><i class="bi bi-eye-slash text-secondary"></i> Lokasi perkiraan (sebaran)</span>
-                        </div>
-                    </div>
+        {{-- Legend (overlay kanan-bawah) --}}
+        <div class="peta-legend card shadow-sm">
+            <div class="card-body py-2 px-3">
+                <div class="small fw-semibold mb-1">Risiko Pekerjaan</div>
+                <div class="d-flex flex-column gap-1 small">
+                    <span><span class="dot-legend" style="background:#198754"></span> Rendah</span>
+                    <span><span class="dot-legend" style="background:#f0ad4e"></span> Sedang</span>
+                    <span><span class="dot-legend" style="background:#dc3545"></span> Kritis</span>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex flex-column gap-1 small">
+                    <span><i class="bi bi-geo-alt-fill text-danger"></i> Tender gagal</span>
+                    <span><i class="bi bi-eye-slash text-secondary"></i> Lokasi perkiraan (sebaran)</span>
                 </div>
             </div>
         </div>
@@ -140,9 +148,29 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <style>
+    /* ===== Overlay di atas peta ===== */
+    .peta-wrap { position: relative; }
+    /* Tint biru wilayah diterapkan langsung pada fill poligon GeoJSON kecamatan
+       (lihat JS) — hanya area dalam batas wilayah yang terwarnai. */
+    .peta-btn {
+        position: absolute; z-index: 900;
+        background: rgba(255,255,255,.95);
+    }
+    .peta-btn-filter { top: 12px; left: 12px; }
+    .peta-btn-daftar { bottom: 12px; left: 12px; }
+    .panel-overlay {
+        position: absolute; z-index: 880;
+        background: rgba(255,255,255,.97);
+        border-radius: .5rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,.18);
+        display: none;
+    }
+    .panel-overlay.show { display: block; }
+    #panel-filter { top: 52px; left: 12px; width: 280px; }
+    .panel-daftar { bottom: 48px; left: 12px; width: 330px; }
     .peta-legend {
-        position: absolute; top: 12px; right: 12px; z-index: 500;
-        width: 190px; background: rgba(255,255,255,.94);
+        position: absolute; bottom: 12px; right: 12px; z-index: 850;
+        width: 180px; background: rgba(255,255,255,.94);
     }
     .dot-legend { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 4px; }
     /* Marker indikator risiko */
@@ -167,13 +195,13 @@
     .leaflet-popup-content { margin: 10px 12px; min-width: 240px; }
     .popup-prog { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px; background: #f8f9fa; }
     .popup-prog span { display: block; height: 100%; border-radius: 2px; }
-    /* Mobile: panel filter off-canvas sederhana */
-    @media (max-width: 991.98px) {
-        .peta-legend { width: 150px; top: 8px; right: 8px; font-size: .8rem; }
-        #peta { height: 480px; }
+    /* Mobile: overlay full-lebar */
+    @media (max-width: 767.98px) {
+        #peta { height: 65vh !important; min-height: 380px; }
+        #panel-filter, .panel-daftar { width: calc(100% - 24px); }
+        .peta-legend { width: 148px; font-size: .78rem; bottom: 8px; right: 8px; }
     }
-    @media (max-width: 767.98px) { #peta { height: 400px; } }
-    @media print { #peta, .peta-legend { display: none; } }
+    @media print { #peta, .peta-legend, .peta-btn, .panel-overlay { display: none; } }
 </style>
 @endpush
 
@@ -185,29 +213,32 @@
 document.addEventListener('DOMContentLoaded', function () {
     'use strict';
 
-    // ====== Inisialisasi peta ======
+    // ====== Inisialisasi peta (zoom di kanan-atas agar tak bertabrakan dengan overlay) ======
     const PUSAT = [-7.4256, 109.6916]; // Pusat Kabupaten Banjarnegara
-    const peta = L.map('peta', { zoomControl: true }).setView(PUSAT, 11);
+    const peta = L.map('peta', { zoomControl: false }).setView(PUSAT, 11);
+    L.control.zoom({ position: 'topright' }).addTo(peta);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(peta);
 
-    // ====== Layer wilayah ======
+    // ====== Layer wilayah (tint biru tipis HANYA di dalam poligon kecamatan) ======
     let layerKec = null;
-    const warnaKec = ['#4c78a8', '#f58518', '#54a24b', '#e45756', '#72b7b2', '#b279a2'];
 
     fetch('{{ asset("peta_kecamatan.geojson") }}')
         .then(r => r.json())
         .then(gj => {
             layerKec = L.geoJSON(gj, {
-                style: { color: '#6c757d', weight: 1.2, fillOpacity: 0.04 },
+                style: { color: '#3b82f6', weight: 1.4, fillColor: '#2563eb', fillOpacity: 0.14 },
                 onEachFeature: (f, layer) => {
                     layer.bindTooltip(f.properties.Kecamatan || '', { sticky: true });
                     layer.on('click', () => ringkasWilayah(f.properties.Kecamatan));
                 }
             }).addTo(peta);
+
+            // Paskan frame ke seluruh batas wilayah: pas di tengah, tidak ada yang terpotong
+            peta.fitBounds(layerKec.getBounds(), { padding: [20, 20] });
         });
 
     // ====== Cluster marker ======
@@ -216,10 +247,6 @@ document.addEventListener('DOMContentLoaded', function () {
         maxClusterRadius: 55,
         iconCreateFunction: buatIkonCluster
     });
-
-    function warnaRisiko(r) {
-        return r === 'kritis' ? '#dc3545' : r === 'sedang' ? '#f0ad4e' : '#198754';
-    }
 
     function buatIkonCluster(c) {
         const anak = c.getAllChildMarkers();
@@ -248,7 +275,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ====== Popup pekerjaan ======
-    const LABEL_TAHAP = { selesai: 'Selesai', proses: 'Proses', belum: 'Belum' };
     const WARNA_TAHAP = { selesai: '#198754', proses: '#0d6efd', belum: '#adb5bd' };
 
     function formatRupiah(n) {
@@ -330,6 +356,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
+    function perbaruiBadgeFilter() {
+        let n = 0;
+        [fOpd, fPokja, fStatus, fMetode].forEach(el => { if (el.value) n++; });
+        if (cari.value.trim()) n++;
+        const b = document.getElementById('jml-aktif');
+        b.textContent = n;
+        b.classList.toggle('d-none', n === 0);
+    }
+
     function renderFilter() {
         const hasil = semuaPaket.filter(paketLolos);
         document.getElementById('stat-filter').textContent = hasil.length;
@@ -340,14 +375,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (peta.hasLayer(cluster)) peta.removeLayer(cluster);
         peta.addLayer(cluster);
 
-        // Daftar sisi kiri
+        // Daftar di panel geser
         const daftar = document.getElementById('daftar-paket');
         document.getElementById('jumlah-daftar').textContent = hasil.length;
+        document.getElementById('jumlah-daftar-2').textContent = hasil.length;
         daftar.innerHTML = hasil.map(p => `
             <button type="button" class="list-group-item list-group-item-action item-paket" data-id="${p.id}">
                 <div class="d-flex justify-content-between align-items-center gap-2">
                     <div class="small">
-                        <div class="fw-semibold text-truncate" style="max-width:230px">${p.nama}</div>
+                        <div class="fw-semibold text-truncate" style="max-width:210px">${p.nama}</div>
                         <div class="text-secondary" style="font-size:.72rem">${p.kode} &bull; ${p.opd_singkatan || '-'} &bull; ${p.desa || p.kecamatan || '-'}</div>
                     </div>
                     <span class="badge flex-shrink-0 text-bg-${p.risiko === 'kritis' ? 'danger' : p.risiko === 'sedang' ? 'warning text-dark' : 'success'}">${p.progres}%</span>
@@ -366,6 +402,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         renderCari(hasil);
+        perbaruiBadgeFilter();
     }
 
     [fOpd, fPokja, fStatus, fMetode].forEach(el => el.addEventListener('change', renderFilter));
@@ -375,6 +412,23 @@ document.addEventListener('DOMContentLoaded', function () {
         [fOpd, fPokja, fStatus, fMetode].forEach(el => el.value = '');
         cari.value = '';
         renderFilter();
+    });
+
+    // ====== Toggle panel overlay ======
+    const panelFilter = document.getElementById('panel-filter');
+    const panelDaftar = document.getElementById('panel-daftar');
+
+    document.getElementById('btn-filter').addEventListener('click', () => panelFilter.classList.toggle('show'));
+    document.getElementById('tutup-filter').addEventListener('click', () => panelFilter.classList.remove('show'));
+    document.getElementById('btn-daftar').addEventListener('click', () => panelDaftar.classList.toggle('show'));
+    document.getElementById('tutup-daftar').addEventListener('click', () => panelDaftar.classList.remove('show'));
+
+    // Tutup kedua panel dengan tombol ESC
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            panelFilter.classList.remove('show');
+            panelDaftar.classList.remove('show');
+        }
     });
 
     // ====== Pencarian: saran dropdown ======
@@ -420,6 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
         peta.closePopup();
         cari.value = nama;
         renderFilter();
+        panelFilter.classList.add('show'); // perlihatkan filter aktif ke pengguna
     };
 
     // ====== Ganti tahun ======
