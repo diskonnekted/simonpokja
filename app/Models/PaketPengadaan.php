@@ -74,6 +74,11 @@ class PaketPengadaan extends Model
         return $this->hasOne(ProgresPekerjaan::class, 'paket_id')->latestOfMany();
     }
 
+    public function pesans()
+    {
+        return $this->hasMany(PesanPaket::class, 'paket_id')->oldest();
+    }
+
     // ====== Indikator Deadline ======
 
     /**

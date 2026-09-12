@@ -12,6 +12,7 @@ use App\Http\Controllers\PokjaController;
 use App\Http\Controllers\PemantauanController;
 use App\Http\Controllers\PetaController;
 use App\Http\Controllers\PokjaDashboardController;
+use App\Http\Controllers\PesanPaketController;
 
 // ================= AUTH =================
 Route::middleware('guest')->group(function () {
@@ -80,4 +81,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // ================= SIMPAN PROGRES (khusus user pokja) =================
 Route::middleware(['auth', 'role:pokja'])->group(function () {
     Route::post('pokja-dasbor/paket/{paket}/progres', [PokjaDashboardController::class, 'simpanProgres'])->name('pokja.progres');
+});
+
+// ================= PERPESANAN PER PEKERJAAN (Kepala LPSE <-> Pokja) =================
+Route::middleware(['auth', 'role:admin,pokja'])->group(function () {
+    Route::get('paket/{paket}/pesan', [PesanPaketController::class, 'index'])->name('pesan.index');
+    Route::post('paket/{paket}/pesan', [PesanPaketController::class, 'store'])->name('pesan.store');
 });

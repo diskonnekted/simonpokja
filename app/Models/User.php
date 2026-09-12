@@ -58,6 +58,11 @@ class User extends Authenticatable
         return $this->hasMany(ProgresPekerjaan::class);
     }
 
+    public function pesanPakets(): HasMany
+    {
+        return $this->hasMany(PesanPaket::class);
+    }
+
     /**
      * Arah redirect setelah login sesuai peran.
      */

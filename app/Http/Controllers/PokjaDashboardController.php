@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PaketPengadaan;
+use App\Models\PesanPaket;
 use App\Models\ProgresPekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,12 +52,20 @@ class PokjaDashboardController extends Controller
 
         $hitung = $pakets->countBy(fn ($p) => $p->status_deadline[0]);
 
+        // Statistik pesan per paket: total & yang belum dibaca user saat ini
+        $statPesan = PesanPaket::whereIn('paket_id', $pakets->pluck('id'))
+            ->selectRaw('paket_id, COUNT(*) as total, SUM(CASE WHEN dibaca_pada IS NULL AND user_id != ? THEN 1 ELSE 0 END) as baru', [$user->id])
+            ->groupBy('paket_id')
+            ->get()
+            ->keyBy('paket_id');
+
         return view('pokja.dasbor', [
             'user' => $user,
             'pokja' => $pokja,
             'listPokja' => $listPokja,
             'pakets' => $pakets,
             'bolehSimpan' => $bolehSimpan,
+            'statPesan' => $statPesan,
             'nLewat' => $hitung['lewat'] ?? 0,
             'nMendesak' => $hitung['mendesak'] ?? 0,
             'nMendekati' => $hitung['mendekati'] ?? 0,

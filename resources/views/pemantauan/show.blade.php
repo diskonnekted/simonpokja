@@ -169,4 +169,22 @@
         </div>
     </div>
 </div>
+
+{{-- ===== Diskusi Kepala LPSE (supervisor) dengan Pokja pemilik pekerjaan ===== --}}
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white pt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-chat-left-text me-2 text-primary"></i>Diskusi dengan Pokja ({{ $paket->pokja->nama ?? '-' }})
+                </h6>
+                <span class="badge text-bg-light border text-secondary fw-normal"><i class="bi bi-lock me-1"></i>Pesan internal per pekerjaan</span>
+            </div>
+            <div class="card-body p-0 bg-body-tertiary">
+                @include('pesan._chat', ['paket' => $paket])
+            </div>
+        </div>
+    </div>
+</div>
+@include('pesan._chat-script')
 @endsection
