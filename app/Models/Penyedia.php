@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MencatatAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Penyedia extends Model
 {
     use SoftDeletes;
+    use MencatatAudit;
 
     protected $table = 'penyedias';
 

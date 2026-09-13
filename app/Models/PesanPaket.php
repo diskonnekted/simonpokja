@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MencatatAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PesanPaket extends Model
 {
+    use MencatatAudit;
+
     protected $fillable = [
         'paket_id', 'user_id', 'pesan', 'dibaca_pada',
     ];

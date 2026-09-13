@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MencatatAudit;
 use Illuminate\Database\Eloquent\Model;
 
 class Evaluasi extends Model
 {
+    use MencatatAudit;
+
     protected $table = 'evaluasis';
 
     protected $fillable = [

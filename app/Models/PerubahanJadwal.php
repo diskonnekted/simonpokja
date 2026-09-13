@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MencatatAudit;
 use Illuminate\Database\Eloquent\Model;
 
 class PerubahanJadwal extends Model
 {
+    use MencatatAudit;
+
     protected $table = 'perubahan_jadwals';
 
     protected $fillable = [
