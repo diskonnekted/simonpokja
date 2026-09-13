@@ -75,11 +75,21 @@ class PokjaController extends Controller
             ->pluck('jumlah', 'risiko');
 
         // ===== TREN PERUBAHAN JADWAL (6 bulan terakhir) =====
-        $trenJadwal = PerubahanJadwal::selectRaw("DATE_FORMAT(tanggal, '%Y-%m') as bulan, COUNT(*) as jumlah")
-            ->where('tanggal', '>=', now()->subMonths(6)->startOfMonth())
+        // Bulan tanpa data tetap dimunculkan (nilai 0) supaya garis tren
+        // memenuhi lebar chart — tidak ada ruang kosong di sisi kiri/kanan.
+        $mentah = PerubahanJadwal::selectRaw("DATE_FORMAT(tanggal, '%Y-%m') as bulan, COUNT(*) as jumlah")
+            ->where('tanggal', '>=', now()->subMonths(5)->startOfMonth())
             ->groupBy('bulan')
-            ->orderBy('bulan')
-            ->get();
+            ->pluck('jumlah', 'bulan');
+
+        $trenJadwal = collect(range(5, 0))->map(function ($mundur) use ($mentah) {
+            $b = now()->subMonths($mundur);
+            return (object) [
+                'bulan'  => $b->format('Y-m'),
+                'label'  => $b->locale('id')->translatedFormat('M y'),
+                'jumlah' => (int) ($mentah[$b->format('Y-m')] ?? 0),
+            ];
+        });
 
         // Perubahan tanpa BA (kepatuhan dokumen)
         $tanpaBa = PerubahanJadwal::where('ada_berita_acara', false)->count();

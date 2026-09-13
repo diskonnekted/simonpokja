@@ -127,7 +127,7 @@
                 <h6 class="fw-bold mb-0">Distribusi Tahapan Tender (Paket Aktif)</h6>
             </div>
             <div class="card-body">
-                <canvas id="chartTahapan" height="220"></canvas>
+                <div class="chart-box"><canvas id="chartTahapan"></canvas></div>
             </div>
         </div>
     </div>
@@ -137,7 +137,7 @@
                 <h6 class="fw-bold mb-0">Tren Perubahan/Pengunduran Jadwal (6 Bulan)</h6>
                 <span class="badge {{ $persenTanpaBa > 20 ? 'text-bg-danger' : 'text-bg-success' }}">{{ $persenTanpaBa }}% tanpa BA</span>
             </div>
-            <div class="card-body"><canvas id="chartTren" height="220"></canvas></div>
+            <div class="card-body"><div class="chart-box"><canvas id="chartTren"></canvas></div></div>
         </div>
     </div>
 </div>
@@ -231,6 +231,10 @@
 <style>
     .pokja-card { transition: all .15s ease; }
     .pokja-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.12) !important; }
+    /* Tinggi chart yang pasti — Chart.js mengisi kotak ini (maintainAspectRatio: false),
+       bukan lagi mengikuti rasio lebar kartu yang menimbulkan ruang kosong */
+    .chart-box { position: relative; height: 240px; }
+    @media (max-width: 991.98px) { .chart-box { height: 210px; } }
 </style>
 @endpush
 
@@ -238,6 +242,20 @@
 <script>
     const tahapLabels = { persiapan: 'Persiapan', pengumuman: 'Pengumuman', evaluasi: 'Evaluasi', sanggah: 'Sanggah', penetapan: 'Penetapan' };
     const tahapData = {!! json_encode($tahapanDistribusi) !!};
+
+    // Opsi bersama: tinggi mengikuti .chart-box (bukan rasio lebar kartu)
+    const opsiDasar = {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 4, right: 6 } },
+        plugins: { legend: { display: false } },
+    };
+    const sumbuY = {
+        beginAtZero: true,
+        ticks: { precision: 0 },
+        grid: { color: 'rgba(100,116,139,.12)' },
+    };
+    const sumbuX = { grid: { display: false } };
 
     // Chart: Distribusi Tahapan Tender
     new Chart(document.getElementById('chartTahapan'), {
@@ -250,22 +268,30 @@
                 borderRadius: 6, maxBarThickness: 42,
             }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        options: { ...opsiDasar, scales: { y: sumbuY, x: sumbuX } }
     });
 
-    // Chart: Tren Perubahan Jadwal
+    // Chart: Tren Perubahan Jadwal (6 titik bulan lengkap — bulan kosong bernilai 0)
+    const trenData = {!! json_encode($trenJadwal->pluck('jumlah')) !!};
     new Chart(document.getElementById('chartTren'), {
         type: 'line',
         data: {
-            labels: {!! json_encode($trenJadwal->pluck('bulan')) !!},
+            labels: {!! json_encode($trenJadwal->pluck('label')) !!},
             datasets: [{
                 label: 'Perubahan jadwal',
-                data: {!! json_encode($trenJadwal->pluck('jumlah')) !!},
+                data: trenData,
                 borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,.08)',
-                fill: true, tension: .35, pointRadius: 4,
+                fill: true, tension: .35, pointRadius: 3, pointHoverRadius: 5,
             }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        options: {
+            ...opsiDasar,
+            scales: {
+                // Semua nol -> pakai skala 0..5 agar garis tidak nempel di dasar chart
+                y: { ...sumbuY, suggestedMax: Math.max(...trenData) === 0 ? 5 : undefined },
+                x: sumbuX,
+            }
+        }
     });
 </script>
 @endpush
