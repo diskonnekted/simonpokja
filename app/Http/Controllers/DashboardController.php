@@ -10,6 +10,11 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Non-admin (pokja/ppk) tidak punya dasbor global — arahkan ke beranda masing-masing
+        if (! $request->user()?->isAdmin()) {
+            return redirect()->route('pokja.dasbor');
+        }
+
         $tahun = $request->get('tahun', date('Y'));
 
         $base = PaketPengadaan::query()->tahun($tahun);

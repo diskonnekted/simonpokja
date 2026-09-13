@@ -24,14 +24,14 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // ================= DASBOR POKJA (admin boleh meninjau) =================
 Route::middleware('auth')->group(function () {
+    // Pintu masuk semua role: non-admin dialihkan ke pokja-dasbor oleh DashboardController
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('pokja-dasbor', [PokjaDashboardController::class, 'index'])->name('pokja.dasbor');
     Route::get('pokja-dasbor/paket/{paket}/riwayat', [PokjaDashboardController::class, 'riwayat'])->name('pokja.riwayat');
 });
 
 // ================= APLIKASI (hanya admin) =================
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
     // ===== DASBOR PETA KEGIATAN (menu teratas) =====
     Route::get('peta-kegiatan', [PetaController::class, 'index'])->name('peta.index');
     Route::get('api/peta/paket', [PetaController::class, 'paket'])->name('peta.api.paket');
