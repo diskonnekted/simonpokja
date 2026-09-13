@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MencatatAudit;
 use Illuminate\Database\Eloquent\Model;
 
 class Sanggahan extends Model
 {
+    use MencatatAudit;
+
     protected $table = 'sanggahans';
 
     protected $fillable = [
