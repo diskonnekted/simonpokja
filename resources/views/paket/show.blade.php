@@ -17,6 +17,13 @@
         </div>
     </div>
     <div class="d-flex gap-2">
+        <a href="{{ route('pesan.index', $paket) }}" class="btn btn-outline-primary btn-sm position-relative">
+            <i class="bi bi-chat-square-text me-1"></i>Diskusi
+            @php $belumDibaca = $paket->pesans()->where('user_id', '!=', auth()->id())->whereNull('dibaca_pada')->count(); @endphp
+            @if ($belumDibaca > 0)
+                <span class="badge text-bg-danger ms-1">{{ $belumDibaca > 99 ? '99+' : $belumDibaca }}</span>
+            @endif
+        </a>
         <a href="{{ route('paket.edit', $paket) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
         <form action="{{ route('paket.destroy', $paket) }}" method="POST" onsubmit="return confirm('Hapus paket ini?')">
             @csrf @method('DELETE')

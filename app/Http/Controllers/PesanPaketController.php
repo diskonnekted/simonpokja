@@ -36,6 +36,11 @@ class PesanPaketController extends Controller
             ->whereNull('dibaca_pada')
             ->update(['dibaca_pada' => now()]);
 
+        // Buka via browser (bukan fetch/AJAX) -> tampilkan halaman diskusi penuh
+        if (! $request->expectsJson()) {
+            return view('pesan.index', compact('paket'));
+        }
+
         $pesans = $paket->pesans()->with('user:id,name,role')->get();
 
         return response()->json([
