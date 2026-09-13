@@ -221,15 +221,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // ====== Basemap multi-penyedia + fallback otomatis ======
     // tile.openstreetmap.org kerap kena blokir (kebijakan tile OSM / jaringan kantor),
     // karena itu disediakan beberapa penyedia; jika satu gagal, peta pindah otomatis.
+    // Catatan: CARTO sengaja TIDAK disertakan — kini menampilkan tile ber-watermark
+    // "API key required" (HTTP 200), sehingga tak terdeteksi oleh fallback berbasis error.
     const BASEMAP = {
-        'CARTO Voyager': L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 20, subdomains: 'abcd',
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-        }),
-        'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }),
         'Esri Jalan': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
             attribution: 'Tiles &copy; Esri &mdash; sumber: Esri, HERE, Garmin, OpenStreetMap'
@@ -238,6 +232,14 @@ document.addEventListener('DOMContentLoaded', function () {
             maxZoom: 19,
             attribution: 'Tiles &copy; Esri &mdash; sumber: Esri, Maxar, Earthstar Geographics'
         }),
+        'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }),
+        'OSM Jerman': L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }),
         'OpenTopoMap': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
             maxZoom: 17, subdomains: 'abc',
             attribution: '&copy; OpenStreetMap contributors &copy; OpenTopoMap (CC-BY-SA)'
@@ -245,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const URUTAN_BASEMAP = Object.keys(BASEMAP);
-    const BASEMAP_DEFAULT = 'CARTO Voyager'; // bukan OSM, menghindari blokir
+    const BASEMAP_DEFAULT = 'Esri Jalan'; // paling stabil: tanpa API key, tanpa watermark
     const KUNCI_BASEMAP = 'peta-basemap';
     const gagalBerturut = {};
     let siklusFallback = 0;
