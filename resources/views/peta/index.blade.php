@@ -218,10 +218,79 @@ document.addEventListener('DOMContentLoaded', function () {
     const peta = L.map('peta', { zoomControl: false }).setView(PUSAT, 11);
     L.control.zoom({ position: 'topright' }).addTo(peta);
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(peta);
+    // ====== Basemap multi-penyedia + fallback otomatis ======
+    // tile.openstreetmap.org kerap kena blokir (kebijakan tile OSM / jaringan kantor),
+    // karena itu disediakan beberapa penyedia; jika satu gagal, peta pindah otomatis.
+    const BASEMAP = {
+        'CARTO Voyager': L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20, subdomains: 'abcd',
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }),
+        'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }),
+        'Esri Jalan': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; sumber: Esri, HERE, Garmin, OpenStreetMap'
+        }),
+        'Esri Satelit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; sumber: Esri, Maxar, Earthstar Geographics'
+        }),
+        'OpenTopoMap': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            maxZoom: 17, subdomains: 'abc',
+            attribution: '&copy; OpenStreetMap contributors &copy; OpenTopoMap (CC-BY-SA)'
+        }),
+    };
+
+    const URUTAN_BASEMAP = Object.keys(BASEMAP);
+    const BASEMAP_DEFAULT = 'CARTO Voyager'; // bukan OSM, menghindari blokir
+    const KUNCI_BASEMAP = 'peta-basemap';
+    const gagalBerturut = {};
+    let siklusFallback = 0;
+
+    Object.entries(BASEMAP).forEach(([nama, layer]) => {
+        layer.on('tileload', () => { gagalBerturut[nama] = 0; siklusFallback = 0; });
+        layer.on('tileerror', () => {
+            if (!peta.hasLayer(layer)) return;
+            gagalBerturut[nama] = (gagalBerturut[nama] || 0) + 1;
+            if (gagalBerturut[nama] >= 8) gantiBasemapOtomatis(nama);
+        });
+    });
+
+    function gantiBasemapOtomatis(dari) {
+        if (siklusFallback >= URUTAN_BASEMAP.length) {
+            infoBasemap('Semua penyedia peta tidak dapat dijangkau. Periksa koneksi jaringan Anda.');
+            return;
+        }
+        siklusFallback++;
+        const berikut = URUTAN_BASEMAP[(URUTAN_BASEMAP.indexOf(dari) + 1) % URUTAN_BASEMAP.length];
+        gagalBerturut[berikut] = 0;
+        peta.removeLayer(BASEMAP[dari]);
+        BASEMAP[berikut].addTo(peta);
+        localStorage.setItem(KUNCI_BASEMAP, berikut);
+        infoBasemap(`Peta "${dari}" tidak merespons — dialihkan otomatis ke "${berikut}".`);
+    }
+
+    function infoBasemap(pesan) {
+        document.getElementById('info-basemap')?.remove();
+        const el = document.createElement('div');
+        el.id = 'info-basemap';
+        el.className = 'alert alert-warning py-1 px-2 small shadow-sm mb-0';
+        el.style.cssText = 'position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:950;max-width:92%;';
+        el.textContent = pesan;
+        document.querySelector('.peta-wrap .card-body').appendChild(el);
+        setTimeout(() => el.remove(), 8000);
+    }
+
+    // Pulihkan pilihan pengguna terakhir; kalau belum ada, pakai default non-OSM
+    const basemapTersimpan = localStorage.getItem(KUNCI_BASEMAP);
+    (BASEMAP[basemapTersimpan] ? BASEMAP[basemapTersimpan] : BASEMAP[BASEMAP_DEFAULT]).addTo(peta);
+
+    // Pemilih basemap manual (pojok kanan atas, di bawah tombol zoom)
+    L.control.layers(BASEMAP, null, { position: 'topright' }).addTo(peta);
+    peta.on('baselayerchange', e => localStorage.setItem(KUNCI_BASEMAP, e.name));
 
     // ====== Layer wilayah (tint biru tipis HANYA di dalam poligon kecamatan) ======
     let layerKec = null;
