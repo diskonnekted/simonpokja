@@ -34,3 +34,7 @@ Thumbs.db
 /isi-*.php
 /cek-*.ps1
 /extract-*.php
+/.tools/
+/app-context.md
+/handover.md
+/scratch/

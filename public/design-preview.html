@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMONPOKJA — Sistem Monitoring Pengadaan Kab. Banjarnegara</title>
+    
+    <!-- Bootstrap 5.3.3 & Bootstrap Icons 1.11.3 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- Chart.js 4.4.3 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --navy-dark: #0f172a;
+            --navy-sidebar: #1e293b;
+            --blue-primary: #1d4ed8;
+            --blue-hover: #1e40af;
+            
+            --bg-canvas: #f8fafc;
+            --bg-panel: #ffffff;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            
+            --border-panel: #cbd5e1;
+            --border-divider: #e2e8f0;
+            
+            --radius-krisp: 4px;
+            --radius-input: 3px;
+            
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            font-size: 13px;
+            line-height: 1.45;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .admin-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 235px;
+            height: 100vh;
+            background: var(--navy-dark);
+            border-right: 1px solid #1e293b;
+            color: #94a3b8;
+            z-index: 1040;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand-box {
+            height: 52px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #1e293b;
+            background: #090d16;
+        }
+
+        .brand-emblem {
+            width: 24px;
+            height: 24px;
+            background: var(--blue-primary);
+            color: #ffffff;
+            border-radius: var(--radius-krisp);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .brand-text-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.2px;
+            line-height: 1.1;
+        }
+
+        .brand-text-sub {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .sidebar-menu-scroll {
+            padding: 6px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .menu-category {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #64748b;
+            font-weight: 700;
+            padding: 12px 16px 4px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 16px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 12.5px;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            transition: background 0.1s, color 0.1s;
+        }
+
+        .menu-link:hover {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        .menu-link.active {
+            background: #1e293b;
+            color: #ffffff;
+            font-weight: 600;
+            border-left-color: #3b82f6;
+        }
+
+        .menu-link i {
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .menu-link.active i {
+            color: #60a5fa;
+        }
+
+        /* ===== TOPBAR (BERSIH, TANPA KAPSUL / BEACON SLOP) ===== */
+        .admin-topbar {
+            position: fixed;
+            top: 0;
+            left: 235px;
+            right: 0;
+            height: 52px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-panel);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1030;
+        }
+
+        .topbar-breadcrumb {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topbar-search {
+            height: 30px;
+            font-size: 12px;
+            border: 1px solid var(--border-panel);
+            border-radius: var(--radius-input);
+            padding: 0 10px 0 28px;
+            width: 220px;
+            background: #f8fafc;
+        }
+
+        /* ===== CANVAS UTAMA ===== */
+        .admin-canvas {
+            margin-left: 235px;
+            margin-top: 52px;
+            padding: 16px 20px;
+            min-height: calc(100vh - 52px);
+        }
+
+        /* ===== ALERT PENGAWASAN (STRUKTURAL, TANPA KAPSUL) ===== */
+        .exec-alert-strip {
+            background: #ffffff;
+            border: 1px solid var(--border-panel);
+            border-left: 3px solid #dc2626;
+            border-radius: var(--radius-krisp);
+            padding: 8px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        /* ===== METRICS STRIP (BERSIH DARI CHIP/KAPSUL) ===== */
+        .metrics-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border: 1px solid var(--border-panel);
+            background: #ffffff;
+            border-radius: var(--radius-krisp);
+            margin-bottom: 14px;
+        }
+
+        .metric-cell {
+            padding: 12px 16px;
+            border-right: 1px solid var(--border-panel);
+        }
+
+        .metric-cell:last-child {
+            border-right: none;
+        }
+
+        .metric-caption {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .metric-number {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        .metric-unit {
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .metric-subtext {
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ===== STATUS RATIO TRACK ===== */
+        .ratio-track-container {
+            background: #ffffff;
+            border: 1px solid var(--border-panel);
+            border-radius: var(--radius-krisp);
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .stacked-progress-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 1px;
+            display: flex;
+            overflow: hidden;
+            margin: 6px 0;
+        }
+
+        .track-seg-success { background: #16a34a; }
+        .track-seg-primary { background: #2563eb; }
+        .track-seg-danger { background: #dc2626; }
+
+        .ratio-legend-row {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== PANEL STRUKTUR TEGAS ===== */
+        .gov-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: var(--radius-krisp);
+            margin-bottom: 14px;
+        }
+
+        .gov-panel-header {
+            padding: 8px 14px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-panel);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .gov-panel-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .gov-panel-body {
+            padding: 14px;
+        }
+
+        /* ===== TABEL DATA RIGID ===== */
+        .gov-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .gov-table th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            padding: 7px 12px;
+            border-top: 1px solid var(--border-panel);
+            border-bottom: 1px solid var(--border-panel);
+            text-align: left;
+        }
+
+        .gov-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-divider);
+            vertical-align: middle;
+            color: var(--text-main);
+        }
+
+        .gov-table tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Filter Tabs */
+        .tab-filter-btn {
+            background: #ffffff;
+            border: 1px solid var(--border-panel);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: var(--radius-input);
+            cursor: pointer;
+        }
+
+        .tab-filter-btn.active {
+            background: #1e293b;
+            color: #ffffff;
+            border-color: #1e293b;
+            font-weight: 600;
+        }
+
+        /* Tombol */
+        .btn-gov {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: var(--radius-input);
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-gov-primary {
+            background: var(--blue-primary);
+            border-color: var(--blue-primary);
+            color: #ffffff;
+        }
+        .btn-gov-primary:hover {
+            background: var(--blue-hover);
+            color: #ffffff;
+        }
+        .btn-gov-outline {
+            background: #ffffff;
+            border-color: var(--border-panel);
+            color: var(--text-secondary);
+        }
+        .btn-gov-outline:hover {
+            background: #f8fafc;
+            color: var(--text-main);
+        }
+
+        @media (max-width: 992px) {
+            .admin-sidebar { display: none; }
+            .admin-topbar { left: 0; }
+            .admin-canvas { margin-left: 0; }
+            .metrics-strip { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand-box">
+            <div class="brand-emblem">P</div>
+            <div>
+                <div class="brand-text-name">SIMONPOKJA</div>
+                <div class="brand-text-sub">LPSE Banjarnegara</div>
+            </div>
+        </div>
+
+        <div class="sidebar-menu-scroll">
+            <a href="/peta-kegiatan" class="menu-link">
+                <i class="bi bi-geo-alt"></i> Peta Kegiatan
+            </a>
+            <a href="/pokja-dasbor" class="menu-link">
+                <i class="bi bi-columns-gap"></i> Dasbor Pokja
+            </a>
+
+            <div class="menu-category">Pengawasan</div>
+            <a href="/kinerja-pokja" class="menu-link">
+                <i class="bi bi-shield-check"></i> Kinerja Pokja
+            </a>
+            <a href="/pemantauan" class="menu-link">
+                <i class="bi bi-exclamation-triangle"></i> Pemantauan SLA
+            </a>
+            <a href="/kelola-pokja" class="menu-link">
+                <i class="bi bi-people"></i> Master Pokja
+            </a>
+
+            <div class="menu-category">Data Pengadaan</div>
+            <a href="#" class="menu-link active">
+                <i class="bi bi-speedometer"></i> Ringkasan Utama
+            </a>
+            <a href="/paket" class="menu-link">
+                <i class="bi bi-folder2-open"></i> Paket Pekerjaan
+            </a>
+            <a href="/opd" class="menu-link">
+                <i class="bi bi-building"></i> Perangkat Daerah
+            </a>
+            <a href="/penyedia" class="menu-link">
+                <i class="bi bi-briefcase"></i> Rekanan Penyedia
+            </a>
+
+            <div class="menu-category">Laporan & Audit</div>
+            <a href="/laporan" class="menu-link">
+                <i class="bi bi-file-earmark-text"></i> Rekapitulasi
+            </a>
+            <a href="/audit" class="menu-link">
+                <i class="bi bi-clock-history"></i> Log Audit Sistem
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===== TOPBAR (BERSIH & RESMI) ===== -->
+    <header class="admin-topbar">
+        <div class="topbar-breadcrumb">
+            <span class="text-secondary fw-semibold">LPSE Banjarnegara</span>
+            <span>/</span>
+            <span class="text-dark fw-bold">Monitoring Pengadaan TA 2026</span>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="position-relative d-none d-md-block">
+                <i class="bi bi-search position-absolute text-muted" style="left: 9px; top: 8px; font-size: 11px;"></i>
+                <input type="text" class="topbar-search" placeholder="Cari paket / OPD / ID...">
+            </div>
+            <div class="border-start ps-3 text-secondary" style="font-size: 12px;">
+                <span class="fw-semibold text-dark">Admin LPSE</span> &bull; admin@simonpokja.go.id
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== CANVAS UTAMA ===== -->
+    <main class="admin-canvas">
+
+        <!-- ALERT OPERASIONAL BERSIH (TANPA KAPSUL) -->
+        <div class="exec-alert-strip">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <span>Terdapat <strong>2 berkas sanggahan</strong> mendekati batas SLA jawaban (&le; 24 Jam) dan <strong>1 paket tender gagal</strong>.</span>
+            </div>
+            <a href="/pemantauan" class="text-danger fw-semibold text-decoration-none" style="font-size: 11.5px;">
+                Tinjau Pemantauan &rarr;
+            </a>
+        </div>
+
+        <!-- Header Halaman -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="h6 fw-bold text-dark mb-0 text-uppercase" style="letter-spacing: 0.3px;">
+                    Rekapitulasi Paket Pengadaan Barang & Jasa TA 2026
+                </h1>
+                <div class="text-secondary" style="font-size: 11px;">
+                    Pemerintah Kabupaten Banjarnegara
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" style="width: 120px; font-size: 11.5px; border-radius: var(--radius-input);">
+                    <option selected>Tahun 2026</option>
+                    <option>Tahun 2025</option>
+                </select>
+                <button class="btn-gov btn-gov-outline">
+                    <i class="bi bi-arrow-repeat"></i> Sinkronkan
+                </button>
+                <button class="btn-gov btn-gov-primary">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Ekspor Rekapitulasi
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. METRICS STRIP (BERSIH DARI CHIP/KAPSUL) -->
+        <div class="metrics-strip">
+            <div class="metric-cell">
+                <div class="metric-caption">Pekerjaan Terdata</div>
+                <div class="metric-number">42 <span class="metric-unit">Paket</span></div>
+                <div class="metric-subtext">23 Konstruksi &bull; 19 Non-Konstruksi</div>
+            </div>
+
+            <div class="metric-cell">
+                <div class="metric-caption">Akumulasi Pagu</div>
+                <div class="metric-number">Rp 74,8 M</div>
+                <div class="metric-subtext">Pagu Terbesar: DPUPR</div>
+            </div>
+
+            <div class="metric-cell">
+                <div class="metric-caption">Nilai Kontrak</div>
+                <div class="metric-number">Rp 68,2 M</div>
+                <div class="metric-subtext">28 Rekanan Aktif</div>
+            </div>
+
+            <div class="metric-cell">
+                <div class="metric-caption">Efisiensi Tender</div>
+                <div class="metric-number text-success" style="color: #15803d !important;">
+                    Rp 6,6 M
+                </div>
+                <div class="metric-subtext">Hemat 8,8% terhadap HPS</div>
+            </div>
+        </div>
+
+        <!-- 2. STATUS RATIO TRACK -->
+        <div class="ratio-track-container">
+            <div class="d-flex justify-content-between align-items-center" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">
+                <span>Distribusi Status Pekerjaan</span>
+                <span class="text-dark">42 Total Paket</span>
+            </div>
+
+            <div class="stacked-progress-bar">
+                <div class="track-seg-success" style="width: 88%;"></div>
+                <div class="track-seg-primary" style="width: 9.5%;"></div>
+                <div class="track-seg-danger" style="width: 2.5%;"></div>
+            </div>
+
+            <div class="ratio-legend-row">
+                <span>Selesai SPK: <strong>37 (88%)</strong></span>
+                <span>Berjalan: <strong>4 (9.5%)</strong></span>
+                <span>Tender Gagal: <strong>1 (2.5%)</strong></span>
+                <span class="ms-auto">Rata-rata Progres: <strong>84%</strong></span>
+            </div>
+        </div>
+
+        <!-- 3. GRAFIK -->
+        <div class="row g-3 mb-3">
+            <div class="col-lg-7">
+                <div class="gov-panel mb-0 h-100">
+                    <div class="gov-panel-header">
+                        <div class="gov-panel-title">Distribusi Pagu per OPD (Top 6)</div>
+                        <span class="text-secondary" style="font-size: 11px;">Miliar Rp</span>
+                    </div>
+                    <div class="gov-panel-body">
+                        <canvas id="chartOpd" height="195"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="gov-panel mb-0 h-100">
+                    <div class="gov-panel-header">
+                        <div class="gov-panel-title">Metode Pemilihan</div>
+                        <span class="text-secondary" style="font-size: 11px;">42 Paket</span>
+                    </div>
+                    <div class="gov-panel-body d-flex justify-content-center">
+                        <div style="width: 100%; max-width: 230px;">
+                            <canvas id="chartMetode" height="195"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. TABEL PENGAWASAN AKTIF (BERSIH TANPA KAPSUL) -->
+        <div class="gov-panel">
+            <div class="gov-panel-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="gov-panel-title">Daftar Paket Dalam Pengawasan Aktif</div>
+                    
+                    <div class="d-flex gap-1">
+                        <button class="tab-filter-btn active" onclick="filterTable('semua', this)">Semua (4)</button>
+                        <button class="tab-filter-btn" onclick="filterTable('perhatian', this)">Perhatian (2)</button>
+                        <button class="tab-filter-btn" onclick="filterTable('konstruksi', this)">Konstruksi (2)</button>
+                    </div>
+                </div>
+
+                <a href="/paket" class="text-decoration-none fw-semibold" style="font-size: 11.5px; color: #1d4ed8;">
+                    Lihat Semua &rarr;
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="gov-table" id="tablePengawasan">
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;">Kode</th>
+                            <th>Nama Pekerjaan Pengadaan</th>
+                            <th>OPD</th>
+                            <th>Nilai Kontrak</th>
+                            <th>Tahapan</th>
+                            <th style="width: 140px;">Progres Fisik</th>
+                            <th>Status</th>
+                            <th style="width: 60px; text-align: center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-type="konstruksi perhatian">
+                            <td><span style="font-family: var(--font-mono); font-size: 11px; color: #475569;">PKJ-2026-004</span></td>
+                            <td>
+                                <div class="fw-semibold text-dark">Peningkatan Ruas Jalan Wanadadi - Rakit</div>
+                                <div class="text-muted" style="font-size: 11px;">Kec. Wanadadi &bull; DAK</div>
+                            </td>
+                            <td><span class="fw-semibold text-secondary">DPUPR</span></td>
+                            <td class="fw-bold">Rp 12,5 M</td>
+                            <td>
+                                <div>Masa Sanggah</div>
+                                <small class="text-muted">Sisa 18 Jam SLA</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 5px; border-radius: 1px; background: #e2e8f0;">
+                                        <div class="progress-bar" style="width: 78%; background: #1d4ed8;"></div>
+                                    </div>
+                                    <span class="fw-semibold" style="font-size: 11px;">78%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-warning" style="color: #b45309 !important;">
+                                    <i class="bi bi-circle-fill me-1" style="font-size: 6px; vertical-align: 1px;"></i>Sedang
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="#" class="btn-gov btn-gov-outline py-0.5 px-2">Tinjau</a>
+                            </td>
+                        </tr>
+
+                        <tr data-type="non-konstruksi">
+                            <td><span style="font-family: var(--font-mono); font-size: 11px; color: #475569;">PKJ-2026-012</span></td>
+                            <td>
+                                <div class="fw-semibold text-dark">Pembangunan Gedung Rawat Inap RSUD Batur</div>
+                                <div class="text-muted" style="font-size: 11px;">Kec. Batur &bull; APBD</div>
+                            </td>
+                            <td><span class="fw-semibold text-secondary">DINKES</span></td>
+                            <td class="fw-bold">Rp 8,4 M</td>
+                            <td>
+                                <div>Pelaksanaan Kontrak</div>
+                                <small class="text-muted">Sesuai Jadwal</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 5px; border-radius: 1px; background: #e2e8f0;">
+                                        <div class="progress-bar" style="width: 92%; background: #16a34a;"></div>
+                                    </div>
+                                    <span class="fw-semibold" style="font-size: 11px;">92%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-success">
+                                    <i class="bi bi-circle-fill me-1" style="font-size: 6px; vertical-align: 1px;"></i>Rendah
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="#" class="btn-gov btn-gov-outline py-0.5 px-2">Tinjau</a>
+                            </td>
+                        </tr>
+
+                        <tr data-type="konstruksi perhatian">
+                            <td><span style="font-family: var(--font-mono); font-size: 11px; color: #475569;">PKJ-2026-018</span></td>
+                            <td>
+                                <div class="fw-semibold text-dark">Jembatan Kali Sapi Mandiraja</div>
+                                <div class="text-muted" style="font-size: 11px;">Kec. Mandiraja &bull; Banprov</div>
+                            </td>
+                            <td><span class="fw-semibold text-secondary">DPUPR</span></td>
+                            <td class="fw-bold">Rp 4,2 M</td>
+                            <td>
+                                <div class="text-danger fw-semibold">Deviasi -18%</div>
+                                <small class="text-danger">Show Cause Meeting</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 5px; border-radius: 1px; background: #e2e8f0;">
+                                        <div class="progress-bar" style="width: 42%; background: #dc2626;"></div>
+                                    </div>
+                                    <span class="fw-semibold text-danger" style="font-size: 11px;">42%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-danger">
+                                    <i class="bi bi-circle-fill me-1" style="font-size: 6px; vertical-align: 1px;"></i>Kritis
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="#" class="btn-gov btn-gov-primary py-0.5 px-2">Tindak</a>
+                            </td>
+                        </tr>
+
+                        <tr data-type="non-konstruksi">
+                            <td><span style="font-family: var(--font-mono); font-size: 11px; color: #475569;">PKJ-2026-025</span></td>
+                            <td>
+                                <div class="fw-semibold text-dark">Pengadaan Server & Jaringan Diskominfo</div>
+                                <div class="text-muted" style="font-size: 11px;">Kab. Banjarnegara &bull; E-Katalog</div>
+                            </td>
+                            <td><span class="fw-semibold text-secondary">DISKOMINFO</span></td>
+                            <td class="fw-bold">Rp 1,8 M</td>
+                            <td>
+                                <div>Pemeriksaan Barang</div>
+                                <small class="text-muted">BAP 90%</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 5px; border-radius: 1px; background: #e2e8f0;">
+                                        <div class="progress-bar" style="width: 65%; background: #1d4ed8;"></div>
+                                    </div>
+                                    <span class="fw-semibold" style="font-size: 11px;">65%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-success">
+                                    <i class="bi bi-circle-fill me-1" style="font-size: 6px; vertical-align: 1px;"></i>Rendah
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="#" class="btn-gov btn-gov-outline py-0.5 px-2">Tinjau</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Chart Configuration Script -->
+    <script>
+        // Bar Chart (Pagu per OPD)
+        new Chart(document.getElementById('chartOpd'), {
+            type: 'bar',
+            data: {
+                labels: ['DPUPR', 'DINKES', 'DISDIKPORA', 'DISPERTAN', 'DISKOMINFO', 'BPPKAD'],
+                datasets: [{
+                    data: [32.4, 18.2, 11.5, 6.8, 3.4, 2.5],
+                    backgroundColor: '#1d4ed8',
+                    borderRadius: 2,
+                    maxBarThickness: 24
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10.5, family: "'Inter', sans-serif" } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(v) { return v + ' M'; },
+                            font: { size: 10.5, family: "'Inter', sans-serif" }
+                        },
+                        grid: { color: '#e2e8f0' }
+                    }
+                }
+            }
+        });
+
+        // Doughnut Chart (Metode Pemilihan)
+        new Chart(document.getElementById('chartMetode'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Tender Pascakualifikasi', 'E-Purchasing', 'Pengadaan Langsung', 'Seleksi Sederhana'],
+                datasets: [{
+                    data: [22, 12, 5, 3],
+                    backgroundColor: ['#1d4ed8', '#16a34a', '#d97706', '#64748b'],
+                    borderWidth: 1,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '74%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 8,
+                            padding: 8,
+                            font: { size: 10, family: "'Inter', sans-serif" }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Filter Function
+        function filterTable(filterKey, btnEl) {
+            document.querySelectorAll('.tab-filter-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+
+            const rows = document.querySelectorAll('#tablePengawasan tbody tr');
+            rows.forEach(r => {
+                const type = r.getAttribute('data-type');
+                if (filterKey === 'semua') {
+                    r.style.display = '';
+                } else if (type && type.includes(filterKey)) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

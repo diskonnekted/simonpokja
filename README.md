@@ -28,8 +28,33 @@ SIMONPOKJA adalah aplikasi web berbasis Laravel yang dirancang untuk memantau da
 - Master data OPD, penyedia, dan paket pengadaan (termasuk impor/kelola paket dengan kode RUP).
 - Laporan rekapitulasi yang dapat dicetak dengan identitas dokumen.
 
+### Peta Sebaran Kegiatan Pengadaan
+- Visualisasi pemetaan spasial paket pengadaan berbasis OpenStreetMap (Leaflet.js) untuk 20 kecamatan dan 275 desa di Kabupaten Banjarnegara.
+- Ringkasan statistik sebaran anggaran dan status pelaksanaan fisik paket di lapangan.
+
+### Perpesanan Pekerjaan (LPSE & Pokja)
+- Ruang koordinasi chat per paket pekerjaan antara Kepala LPSE dan Pokja terkait.
+- Rekam jejak klarifikasi kendala lapangan, instruksi percepatan, dan riwayat komunikasi per paket.
+
+### Push Notifikasi Multi-Akun & In-App Center
+- **Notifikasi Peramban Instan (W3C Web Push VAPID):** Notifikasi tetap terkirim secara *real-time* ke perangkat pengguna meski browser berada di latar belakang atau tab ditutup.
+- **In-App Notification Center:** Dropdown lonceng pada navbar dengan badge dinamis jumlah belum dibaca, panel preview cepat, dan halaman riwayat lengkap (`/notifikasi`).
+- **Pemicu Notifikasi Multi-Event:**
+  - *Perpesanan Paket:* Notifikasi langsung saat ada pesan masuk baru dari Pokja atau Kepala LPSE.
+  - *Early Warning System (EWS):* Peringatan kritis ketika paket mengalami pengunduran jadwal >3x atau sanggahan rekanan mendekati batas SLA 3 hari.
+  - *Pembaruan Progres:* Pemberitahuan otomatis saat Pokja menginput capaian progres fisik pekerjaan.
+- **Live Synthesized Audio Alert:** Peringatan audio menggunakan Web Audio API Synthesizer (nada ganda harmonis 520Hz & 660Hz) tanpa berkas MP3 eksternal, anti-gagal, dan tanpa latensi jaringan.
+- **Desain Toast Anti-AI-Slop:** Toast notifikasi krisp 4px (`.toast-gov`) berstandar kontras tinggi WCAG AA, non-floating, dan bergaya *Swiss Government Data-Dense*.
+
+### Portal Taktis Pokja Pemilihan (Anti-AI-Slop)
+- **Dasbor Taktis & Triage:** 4 kartu status terarah (*Butuh Tindakan Segera*, *Sedang Berjalan*, *Selesai Tuntas*, dan *Skor Risiko Pokja Interaktif*), modal rincian risiko transparan, filter chip instan, dan pengurutan prioritas triage.
+- **Sanggahan Rekanan & SLA 3 Hari Kerja (`/pokja-sanggahan`):** Pemantauan keberatan rekanan khusus paket kelolaan Pokja, countdown status SLA (*Terlewat, Mendesak, Berjalan, Selesai*), serta modal keputusan resmi Pokja yang otomatis menyelesaikan alert anomali.
+- **Linimasa & Log Audit Perubahan Jadwal (`/pokja-jadwal`):** Audit addendum linimasa tahapan tender, deteksi dini perubahan tanpa Berita Acara (BA), dan pemantauan paket berisiko tinggi (jadwal diubah $>3\times$).
+- **Lembar Kendali Kepatuhan Print-Ready (`/pokja-laporan`):** Dokumen kendali kepatuhan dinas resmi ber-kop Pemerintah Kabupaten Banjarnegara / UKPBJ LPSE, ringkasan eksekutif, rekap paket, dan kolom tanda tangan fisik sah (Kepala UKPBJ & Ketua Pokja).
+
 ### Keamanan dan Aksesibilitas
 - Autentikasi sesi Laravel dengan proteksi middleware pada seluruh rute.
+- Pengecualian CSRF pada rute logout untuk mencegah error 419 Page Expired saat sesi berakhir.
 - Kontras warna memenuhi standar WCAG 2.1 level AA (diverifikasi dengan skrip pemeriksa kontras).
 - Tabel responsif yang berubah menjadi kartu pada layar mobile.
 
@@ -37,18 +62,20 @@ SIMONPOKJA adalah aplikasi web berbasis Laravel yang dirancang untuk memantau da
 
 | Komponen | Keterangan |
 |---|---|
-| Framework | Laravel 12 (PHP 8.2) |
+| Framework | Laravel 12 (PHP 8.2+) |
+| Push Notification | W3C Web Push API, `minishlink/web-push`, Service Worker (`sw.js`) VAPID |
 | Database | MySQL 8 (kompatibel MariaDB 10.4+) |
 | Antarmuka | Bootstrap 5.3.3, Bootstrap Icons |
+| Peta Spasial | Leaflet.js, OpenStreetMap |
 | Grafik | Chart.js 4.4.3 |
-| Build aset | Tanpa Vite; seluruh aset dimuat melalui CDN |
+| Build aset | Tanpa Vite; seluruh aset dimuat melalui CDN & runtime mandiri |
 
 ## Persyaratan Sistem
 
-- PHP 8.2 atau lebih baru dengan ekstensi: pdo_mysql, mbstring, openssl, ctype, json, fileinfo.
+- PHP 8.2 atau lebih baru dengan ekstensi: `pdo_mysql`, `mbstring`, `openssl`, `curl`, `fileinfo`, `ctype`, `json`, dan `gmp`/`bcmath`.
 - Composer 2.
 - MySQL 8 atau MariaDB 10.4+.
-- Web server lokal (contoh: XAMPP, Laragon) atau server produksi dengan Nginx/Apache.
+- Web server lokal (contoh: XAMPP, Laragon, atau portable PHP di `.tools/`) atau server produksi dengan Nginx/Apache.
 
 ## Instalasi
 
@@ -105,11 +132,29 @@ php artisan serve
 
 Aplikasi dapat diakses pada alamat `http://127.0.0.1:8080`.
 
+### Menjalankan dengan Portable PHP (Windows)
+
+Tersedia bundel PHP 8.3 portable di dalam direktori `.tools/` untuk lingkungan Windows tanpa perlu instalasi global:
+
+```cmd
+run.bat
+```
+
+Atau melalui PowerShell:
+```powershell
+.\serve.ps1
+```
+
 ## Akun Bawaan
 
-| Peran | Email | Kata Sandi |
-|---|---|---|
-| Administrator | admin@banjarnegara.go.id | password |
+| Peran | Email | Kata Sandi | Hak Akses |
+|---|---|---|---|
+| Administrator LPSE | `admin@banjarnegara.go.id` | `password` | Akses penuh seluruh modul admin, peta, pemantauan, dan audit |
+| Pokja I (Barang) | `pokja1@banjarnegara.go.id` | `password` | Dasbor kerja Pokja I, pembaruan progres paket, & perpesanan |
+| Pokja II (Konsultansi) | `pokja2@banjarnegara.go.id` | `password` | Dasbor kerja Pokja II, pembaruan progres paket, & perpesanan |
+| Pokja III (Konstruksi) | `pokja3@banjarnegara.go.id` | `password` | Dasbor kerja Pokja III, pembaruan progres paket, & perpesanan |
+| Pokja IV (Jasa Lainnya) | `pokja4@banjarnegara.go.id` | `password` | Dasbor kerja Pokja IV, pembaruan progres paket, & perpesanan |
+| Pokja V (Swakelola) | `pokja5@banjarnegara.go.id` | `password` | Dasbor kerja Pokja V, pembaruan progres paket, & perpesanan |
 
 Segera ubah kata sandi bawaan setelah penerapan pada lingkungan produksi.
 
@@ -117,17 +162,20 @@ Segera ubah kata sandi bawaan setelah penerapan pada lingkungan produksi.
 
 ```
 app/
-  Http/Controllers/      Logika kontroler (Pokja, Pemantauan, Laporan, Master data)
-  Models/                Model Eloquent beserta atribut turunan (skor risiko, progres tahapan)
+  Http/Controllers/      Logika kontroler (Pokja, Pemantauan, Notifikasi, Master data)
+  Models/                Model Eloquent (Pokja, PaketPengadaan, PushSubscription, Notifikasi)
+  Services/              NotificationService (Orkestrator Web Push VAPID & log database)
 database/
-  migrations/            Skema tabel: pokjas, paket_pengadaans, tahapans, perubahan_jadwals,
-                         sanggahans, alert_anomalis, audit_checklists, audit_logs, dan lainnya
+  migrations/            Skema tabel pengadaan, audit, pesan, dan push notifikasi
   seeders/               PokjaSeeder, SirupDummySeeder, SimulasiKinerjaSeeder
+public/
+  sw.js                  Service Worker W3C penangan event push background
 resources/views/
-  layouts/               Kerangka layout utama dengan sidebar dan CSS responsif
+  layouts/               Layout utama, lonceng notifikasi (_notifications.blade.php), toast
   pokja/                 Dashboard kinerja, detail Pokja, kelola Pokja
   pemantauan/            Paket bermasalah, perubahan jadwal, sanggahan
-routes/web.php          Definisi seluruh rute aplikasi
+  notifikasi/            Halaman log riwayat notifikasi pengguna
+routes/web.php          Definisi seluruh rute aplikasi dan API Web Push
 ```
 
 ## Model Data Utama
@@ -142,6 +190,9 @@ routes/web.php          Definisi seluruh rute aplikasi
 | alert_anomalis | Peringatan otomatis berjenjang (info, warning, critical) |
 | audit_checklists | Hasil checklist audit 6 kategori per Pokja |
 | audit_logs | Rekam jejak perubahan data untuk kepentingan audit |
+| pesan_pakets | Riwayat percakapan/koordinasi pekerjaan per paket |
+| push_subscriptions | Pendaftaran endpoint & public key browser per pengguna (Web Push VAPID) |
+| notifikasis | Log riwayat pemberitahuan in-app & alert sistem |
 
 ## Perhitungan Skor Risiko
 
@@ -168,13 +219,17 @@ Label risiko: RENDAH (skor rendah), TINGGI (skor menengah), KRITIS (skor tinggi)
 
 Seluruh butir berpolaritas temuan: jawaban "ya" menandakan adanya masalah atau penyimpangan yang perlu ditindaklanjuti.
 
-## Perintah Artisan yang Relevan
+## Perintah Artisan & Pengujian Sistem
 
 ```bash
 php artisan migrate --seed                                # Migrasi dan data awal
 php artisan db:seed --class=SimulasiKinerjaSeeder --force # Data simulasi kinerja
 php artisan db:seed --class=SirupDummySeeder --force      # Paket dummy berkode RUP
 php artisan serve                                         # Server pengembangan
+
+# Menjalankan Uji Otomasi Notifikasi & Simulasi Pengadaan
+php .tools/php/php.exe scratch/test_notifications.php
+php .tools/php/php.exe scratch/test_procurement_simulation.php
 ```
 
 ## Lisensi
