@@ -80,7 +80,7 @@
             <a href="{{ route('pokja.show', $p) }}" class="text-decoration-none">
                 <div class="card h-100 pokja-card position-relative overflow-hidden">
                     <div class="position-absolute top-0 end-0 mt-2 me-2">
-                        <span class="badge text-bg-{{ $p->warna_risiko }}">{{ $p->label_risiko }}</span>
+                        <span class="badge badge-risiko-{{ strtolower($p->label_risiko) }}">{{ $p->label_risiko }}</span>
                     </div>
                     <div class="card-body">
                         <h6 class="fw-bold mb-1 text-dark">{{ $p->nama }}</h6>
@@ -191,7 +191,7 @@
                 <h6 class="fw-bold mb-0">Segmentasi Risiko Paket</h6>
                 <div class="d-flex gap-2 small">
                     @foreach (['kritis' => 'danger', 'sedang' => 'warning', 'rendah' => 'success'] as $r => $c)
-                        <span class="badge text-bg-{{ $c }}">{{ strtoupper($r) }}: {{ $risikoDistribusi[$r] ?? 0 }}</span>
+                        <span class="badge badge-risiko-{{ $r }}">{{ strtoupper($r) }}: {{ $risikoDistribusi[$r] ?? 0 }}</span>
                     @endforeach
                 </div>
             </div>

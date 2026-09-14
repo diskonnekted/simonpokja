@@ -113,7 +113,12 @@ class PokjaController extends Controller
     // ===== DETAIL POKJA: KINERJA + CHECKLIST AUDIT =====
     public function show(Request $request, Pokja $pokja)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        if ($request->filled('tahun')) {
+            $tahun = (int) $request->query('tahun');
+        } else {
+            $adaTahunIni = $pokja->pakets()->where('tahun_anggaran', (int) date('Y'))->exists();
+            $tahun = $adaTahunIni ? (int) date('Y') : ($pokja->pakets()->max('tahun_anggaran') ?: (int) date('Y'));
+        }
 
         $pakets = $pokja->pakets()->with(['opd', 'penyedia', 'tahapans'])
             ->where('tahun_anggaran', $tahun)

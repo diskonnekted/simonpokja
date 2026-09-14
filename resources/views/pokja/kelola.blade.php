@@ -44,10 +44,17 @@
                             <i class="bi bi-graph-up me-1"></i>Kinerja
                         </a>
                         <a href="{{ route('pokja.edit', $p) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
-                        <form action="{{ route('pokja.destroy', $p) }}" method="POST"
-                              onsubmit="return confirm('Hapus {{ $p->nama }}?')">
+                        <form action="{{ route('pokja.destroy', $p) }}" method="POST">
                             @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus Pokja"
+                                    data-confirm-modal
+                                    data-confirm-title="Hapus Pokja"
+                                    data-confirm-message="Yakin ingin menghapus Pokja {{ $p->nama }}? Pastikan tidak ada paket aktif yang terkait dengan Pokja ini."
+                                    data-confirm-btn-text="Hapus Pokja"
+                                    data-confirm-btn-class="btn-danger"
+                                    data-confirm-icon="bi-trash-fill text-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -55,9 +62,13 @@
         </div>
     @empty
         <div class="col-12">
-            <div class="card"><div class="card-body text-center text-secondary py-5">
-                <i class="bi bi-diagram-3 fs-1 d-block mb-2"></i>
-                Belum ada pokja terdaftar. Klik "Tambah Pokja" untuk mendaftarkan.
+            <div class="card border-dashed"><div class="card-body text-center text-secondary py-5">
+                <i class="bi bi-diagram-3 fs-1 d-block mb-2 text-muted"></i>
+                <div class="fw-semibold text-dark mb-1">Belum Ada Pokja Terdaftar</div>
+                <p class="small text-secondary mb-3">Daftarkan Kelompok Kerja (Pokja) untuk mulai mengalokasikan paket pengadaan dan memantau kinerja.</p>
+                <a href="{{ route('pokja.create') }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Tambah Pokja Baru
+                </a>
             </div></div>
         </div>
     @endforelse

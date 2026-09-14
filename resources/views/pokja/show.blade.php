@@ -2,6 +2,19 @@
 
 @section('title', $pokja->nama)
 
+@section('breadcrumb')
+<ul class="breadcrumb-links">
+    <li><a href="{{ route('dashboard') }}"><i class="bi bi-house-door me-1"></i>Beranda</a></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li><a href="{{ route('pokja.index') }}">Kinerja Pokja</a></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li class="active">{{ $pokja->nama }}</li>
+</ul>
+<div class="text-secondary small font-monospace d-none d-sm-block">
+    <i class="bi bi-person-badge me-1"></i>Ketua: {{ $pokja->ketua }} &bull; TA {{ $tahun }}
+</div>
+@endsection
+
 @section('content')
 {{-- ===== Header ===== --}}
 <div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-2">
@@ -10,7 +23,7 @@
         <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <h4 class="fw-bold mb-0">{{ $pokja->nama }}</h4>
-                <span class="badge text-bg-{{ $pokja->warna_risiko }}">Risiko {{ $pokja->label_risiko }} ({{ $pokja->skor_risiko }}/100)</span>
+                <span class="badge badge-risiko-{{ strtolower($pokja->label_risiko) }}">Risiko {{ $pokja->label_risiko }} ({{ $pokja->skor_risiko }}/100)</span>
             </div>
             <p class="text-secondary mb-0 small">{{ $pokja->bidang }} &bull; Ketua: {{ $pokja->ketua }} &bull; {{ count($pokja->anggota ?? []) }} anggota</p>
         </div>
@@ -87,7 +100,7 @@
                 <table class="table table-sm table-hover mb-0">
                     <thead><tr>
                         <th class="ps-3">Paket</th>
-                        <th>Progres Tahapan</th>
+                        <th title="Progres fisik pekerjaan &amp; tahapan pengadaan">Progres</th>
                         <th>Risiko</th>
                         <th>Pagu</th>
                         <th class="pe-3">Status</th>
@@ -111,16 +124,16 @@
                                                   data-bs-toggle="tooltip" data-bs-title="{{ $t['nama'] }} — {{ $t['status'] == 'selesai' ? 'selesai' : ($t['status'] == 'proses' ? 'sedang proses' : 'belum mulai') }}"></span>
                                         @endforeach
                                     </div>
-                                    <small class="text-secondary tahapan-persen">{{ $p->progres_persen }}%</small>
+                                    <small class="text-secondary tahapan-persen">{{ $p->progress }}%</small>
                                 </td>
                                 <td>
-                                    <span class="badge text-bg-{{ ['rendah' => 'success', 'sedang' => 'warning text-dark', 'kritis' => 'danger'][$p->risiko] }}">
+                                    <span class="badge badge-risiko-{{ $p->risiko }}">
                                         {{ ucfirst($p->risiko) }}
                                     </span>
                                     @if ($p->tender_gagal) <i class="bi bi-x-octagon text-danger" title="Tender gagal"></i>@endif
                                 </td>
                                 <td class="text-nowrap">{{ format_rupiah_singkat($p->pagu) }}</td>
-                                <td class="pe-3"><small>{{ $p->status_label }}</small></td>
+                                <td class="pe-3"><span class="badge text-bg-{{ status_badge_class($p->status) }}">{{ $p->status_label }}</span></td>
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-center text-secondary py-4">Tidak ada paket TA {{ $tahun }}</td></tr>
@@ -169,7 +182,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="text-center text-secondary py-4">Tidak ada perubahan jadwal ✓</td></tr>
+                            <tr><td colspan="4" class="text-center text-secondary py-4"><i class="bi bi-check-circle text-success me-1"></i>Tidak ada perubahan jadwal</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -186,7 +199,7 @@
                     <thead><tr>
                         <th class="ps-3">Paket</th>
                         <th>Penyedia</th>
-                        <th>Masuk → Dijawab</th>
+                        <th>Masuk <i class="bi bi-arrow-right small"></i> Dijawab</th>
                         <th class="pe-3">Hasil</th>
                     </tr></thead>
                     <tbody>
@@ -194,7 +207,7 @@
                             <tr>
                                 <td class="ps-3"><small>{{ $s->paket->kode_paket ?? '-' }}</small></td>
                                 <td><small>{{ $s->penyedia->nama ?? '-' }}</small></td>
-                                <td><small>{{ format_tanggal_id($s->tanggal_masuk) }}<br>→ {{ $s->tanggal_dijawab ? format_tanggal_id($s->tanggal_dijawab) : 'BELUM' }}</small></td>
+                                <td><small>{{ format_tanggal_id($s->tanggal_masuk) }}<br><i class="bi bi-arrow-return-right text-secondary me-1"></i>{{ $s->tanggal_dijawab ? format_tanggal_id($s->tanggal_dijawab) : 'BELUM' }}</small></td>
                                 <td class="pe-3">
                                     <span class="badge {{ $s->hasil == 'menunggu' ? 'text-bg-warning text-dark' : ($s->hasil == 'diterima' ? 'text-bg-success' : 'text-bg-secondary') }}">
                                         {{ ucfirst($s->hasil) }}

@@ -2,65 +2,207 @@
 
 @section('title', 'Dasbor Pokja — ' . $pokja->nama)
 
+@section('breadcrumb')
+<ul class="breadcrumb-links">
+    <li><a href="{{ route('dashboard') }}"><i class="bi bi-house-door me-1"></i>Beranda</a></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li><span class="text-secondary">Kelompok Kerja</span></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li class="active">{{ $pokja->nama }}</li>
+</ul>
+<div class="text-secondary small font-monospace d-none d-sm-block">
+    <i class="bi bi-person-badge me-1"></i>{{ $pokja->bidang }} (TA {{ $tahun }})
+</div>
+@endsection
+
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <div>
         <h1 class="h4 mb-0">Dasbor {{ $pokja->nama }}</h1>
-        <small class="text-secondary">{{ $pokja->bidang }} &bull; {{ auth()->user()->name }}</small>
+        <small class="text-secondary">{{ $pokja->bidang }} &bull; {{ $user->name }}</small>
     </div>
-    @if ($user->isAdmin())
-        <form method="GET" action="{{ route('pokja.dasbor') }}" class="d-flex gap-2 align-items-center">
-            <label class="small text-secondary mb-0" for="pilih-pokja">Mode tinjauan:</label>
+    <form method="GET" action="{{ route('pokja.dasbor') }}" class="d-flex gap-2 align-items-center flex-wrap">
+        @if ($user->isAdmin())
+            <label class="small text-secondary mb-0" for="pilih-pokja">Pokja:</label>
             <select id="pilih-pokja" name="pokja" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
                 @foreach ($listPokja as $pj)
                     <option value="{{ $pj->id }}" {{ $pj->id == $pokja->id ? 'selected' : '' }}>{{ $pj->nama }}</option>
                 @endforeach
             </select>
-        </form>
-    @endif
+        @endif
+        <label class="small text-secondary mb-0" for="pilih-tahun">Tahun:</label>
+        <select id="pilih-tahun" name="tahun" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+            @foreach ($tahuns as $t)
+                <option value="{{ $t }}" {{ $t == $tahun ? 'selected' : '' }}>TA {{ $t }}</option>
+            @endforeach
+        </select>
+    </form>
 </div>
 
-{{-- Ringkasan --}}
+{{-- Baris Metrik Taktis Pokja --}}
 <div class="row g-2 mb-3">
-    <div class="col-6 col-lg-2"><div class="card h-100"><div class="card-body py-2 px-3">
-        <div class="text-secondary small">Skor Risiko</div>
-        <div class="h5 mb-0">{{ $pokja->skor_risiko }}
-            <span class="badge text-bg-{{ $pokja->warna_risiko }} fs-6">{{ $pokja->label_risiko }}</span>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100 border-start border-4 border-danger js-card-filter shadow-sm" data-filter="perlu_aksi" title="Klik untuk menyaring pekerjaan yang perlu tindakan segera" style="cursor: pointer;">
+            <div class="card-body py-2 px-3">
+                <div class="text-secondary small d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold">Butuh Tindakan Segera</span>
+                    <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                </div>
+                <div class="fs-4 fw-bold text-danger mb-0">{{ $countPerStatus['perlu_aksi'] }} <small class="fs-6 fw-normal text-muted">pekerjaan</small></div>
+                <div class="text-secondary" style="font-size: 0.7rem;">&bull; Klik untuk tampilkan antrean</div>
+            </div>
         </div>
-    </div></div></div>
-    <div class="col-6 col-lg-2"><div class="card h-100"><div class="card-body py-2 px-3">
-        <div class="text-secondary small">Beban Kerja</div>
-        <div class="h5 mb-0">{{ $pakets->count() }} <small class="text-secondary">paket</small></div>
-    </div></div></div>
-    <div class="col-6 col-lg-2"><div class="card h-100 border-danger-subtle"><div class="card-body py-2 px-3">
-        <div class="text-secondary small">Lampaui Deadline</div>
-        <div class="h5 mb-0 text-danger">{{ $nLewat }}</div>
-    </div></div></div>
-    <div class="col-6 col-lg-2"><div class="card h-100 border-warning-subtle"><div class="card-body py-2 px-3">
-        <div class="text-secondary small">Mendesak (&le;7 hari)</div>
-        <div class="h5 mb-0 text-warning">{{ $nMendesak }}</div>
-    </div></div></div>
-    <div class="col-6 col-lg-2"><div class="card h-100"><div class="card-body py-2 px-3">
-        <div class="text-secondary small">Mendekati (&le;30 hari)</div>
-        <div class="h5 mb-0 text-secondary">{{ $nMendekati }}</div>
-    </div></div></div>
-    <div class="col-6 col-lg-2"><div class="card h-100"><div class="card-body py-2 px-3">
-        <div class="text-secondary small">Kepatuhan SLA</div>
-        <div class="h5 mb-0">{{ (int) $pokja->kepatuhan_sla }}%</div>
-    </div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100 border-start border-4 border-primary js-card-filter shadow-sm" data-filter="aktif" title="Klik untuk menyaring pekerjaan yang sedang aktif berjalan" style="cursor: pointer;">
+            <div class="card-body py-2 px-3">
+                <div class="text-secondary small d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold">Sedang Berjalan</span>
+                    <i class="bi bi-play-circle-fill text-primary"></i>
+                </div>
+                <div class="fs-4 fw-bold text-primary mb-0">{{ $countPerStatus['persiapan'] + $countPerStatus['pemilihan'] + $countPerStatus['kontrak'] + $countPerStatus['pelaksanaan'] }} <small class="fs-6 fw-normal text-muted">paket</small></div>
+                <div class="text-secondary" style="font-size: 0.7rem;">&bull; Persiapan, Pemilihan, Kontrak</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100 border-start border-4 border-success js-card-filter shadow-sm" data-filter="selesai" title="Klik untuk menyaring pekerjaan yang sudah 100% selesai" style="cursor: pointer;">
+            <div class="card-body py-2 px-3">
+                <div class="text-secondary small d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold">Selesai Tuntas</span>
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+                <div class="fs-4 fw-bold text-success mb-0">{{ $countPerStatus['selesai'] }} <small class="fs-6 fw-normal text-muted">paket</small></div>
+                <div class="text-secondary" style="font-size: 0.7rem;">&bull; Serah terima PPK 100%</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100 border-start border-4 border-{{ $rincianRisiko['warna'] }} shadow-sm" data-bs-toggle="modal" data-bs-target="#modal-rincian-risiko" title="Klik untuk membuka rincian faktor risiko dan mitigasinya" style="cursor: pointer;">
+            <div class="card-body py-2 px-3">
+                <div class="text-secondary small d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold">Skor Risiko Pokja</span>
+                    <i class="bi bi-info-circle-fill text-{{ $rincianRisiko['warna'] }}"></i>
+                </div>
+                <div class="fs-4 fw-bold text-{{ $rincianRisiko['warna'] }} d-flex align-items-center gap-2 mb-0">
+                    {{ $rincianRisiko['total'] }}
+                    <span class="badge text-bg-{{ $rincianRisiko['warna'] }}" style="font-size: 0.65rem;">{{ $rincianRisiko['label'] }}</span>
+                </div>
+                <div class="text-{{ $rincianRisiko['warna'] }}" style="font-size: 0.7rem;"><i class="bi bi-hand-index-thumb me-1"></i>Klik lihat rincian bobot</div>
+            </div>
+        </div>
+    </div>
 </div>
+
+{{-- R2: Perlu Tindakan Segera --}}
+@if ($perluTindakan->isNotEmpty())
+    <div class="card border-warning mb-3">
+        <div class="card-header bg-warning-subtle py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                <strong class="small text-dark">Perlu Tindakan Segera ({{ $perluTindakan->count() }} Item)</strong>
+            </div>
+            <small class="text-secondary">Pekerjaan dengan deadline kritis, sanggahan aktif, atau pesan koordinasi belum dijawab</small>
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush small">
+                @foreach ($perluTindakan as $item)
+                    <li class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge text-bg-{{ $item['badge_class'] }}">
+                                <i class="bi {{ $item['ikon'] }} me-1"></i>{{ $item['judul'] }}
+                            </span>
+                            <span class="fw-semibold text-dark">{{ $item['paket']->nama_paket }}</span>
+                            <span class="text-secondary font-monospace">({{ $item['paket']->kode_paket }})</span>
+                            <span class="text-secondary">&bull; {{ $item['pesan'] }}</span>
+                        </div>
+                        <div>
+                            @if (isset($item['url']))
+                                <a href="{{ $item['url'] }}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
+                                    {{ $item['aksi'] }} <i class="bi bi-arrow-right"></i>
+                                </a>
+                            @elseif (($item['modal'] ?? '') === 'pesan')
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 js-btn-pesan"
+                                        style="font-size: 0.75rem;"
+                                        data-bs-toggle="modal" data-bs-target="#modal-pesan"
+                                        data-paket-id="{{ $item['paket']->id }}"
+                                        data-nama="{{ $item['paket']->nama_paket }}">
+                                    <i class="bi bi-chat-left-text me-1"></i>{{ $item['aksi'] }}
+                                </button>
+                            @elseif (($item['modal'] ?? '') === 'progres' && $bolehSimpan)
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 js-btn-simpan-progres"
+                                        style="font-size: 0.75rem;"
+                                        data-bs-toggle="modal" data-bs-target="#modal-simpan-progres"
+                                        data-action="{{ route('pokja.progres', $item['paket']) }}"
+                                        data-kode="{{ $item['paket']->kode_paket }}"
+                                        data-nama="{{ $item['paket']->nama_paket }}"
+                                        data-progres="{{ (int) $item['paket']->progress }}"
+                                        data-status="{{ $item['paket']->status }}"
+                                        title="Simpan atau perbarui progres pekerjaan">
+                                    <i class="bi bi-pencil-square me-1"></i>{{ $item['aksi'] }}
+                                </button>
+                            @else
+                                <a href="#tabel-paket" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">
+                                    {{ $item['aksi'] }} <i class="bi bi-arrow-down"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
 
 {{-- Daftar pekerjaan --}}
-<div class="card">
-    <div class="card-header py-2 d-flex justify-content-between align-items-center gap-2 flex-wrap">
-        <span><i class="bi bi-list-task me-1"></i><strong>Daftar Pekerjaan</strong>
-            <span class="text-secondary small">TA {{ date('Y') }}</span></span>
-        <div class="d-flex align-items-center gap-2">
+<div class="card mb-3 shadow-sm">
+    <div class="card-header bg-white py-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold small text-dark"><i class="bi bi-list-task text-primary me-1"></i>Daftar Pekerjaan TA {{ $tahun }}</span>
+                <span class="badge bg-light text-secondary border" id="info-jumlah">{{ $pakets->count() }} paket</span>
+            </div>
             <div class="input-group input-group-sm" style="width: 250px;">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
-                <input type="text" id="cari-paket" class="form-control border-start-0 ps-1" placeholder="Cari pekerjaan… ( / )" autocomplete="off">
+                <input type="text" id="cari-paket" class="form-control border-start-0 ps-1" placeholder="Cari nama/OPD... ( / )" autocomplete="off">
             </div>
-            <span class="badge text-bg-primary" id="info-jumlah" title="Jumlah pekerjaan yang ditampilkan">{{ $pakets->count() }}</span>
+        </div>
+        {{-- Quick Filter Chips --}}
+        <div class="d-flex flex-wrap gap-1 align-items-center pt-2 border-top" id="filter-chips">
+            <span class="small text-secondary me-1" style="font-size: 0.72rem;"><i class="bi bi-funnel me-1"></i>Filter Tahap:</span>
+            <button type="button" class="btn btn-sm btn-dark py-0 px-2 chip-btn active" data-chip="semua" style="font-size: 0.72rem; border-radius: 4px;">
+                Semua ({{ $countPerStatus['semua'] }})
+            </button>
+            @if ($countPerStatus['perlu_aksi'] > 0)
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 chip-btn" data-chip="perlu_aksi" style="font-size: 0.72rem; border-radius: 4px;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Perlu Aksi ({{ $countPerStatus['perlu_aksi'] }})
+                </button>
+            @endif
+            @if ($countPerStatus['persiapan'] > 0)
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 chip-btn" data-chip="persiapan" style="font-size: 0.72rem; border-radius: 4px;">
+                    Persiapan ({{ $countPerStatus['persiapan'] }})
+                </button>
+            @endif
+            @if ($countPerStatus['pemilihan'] > 0)
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-btn" data-chip="pemilihan" style="font-size: 0.72rem; border-radius: 4px;">
+                    Pemilihan ({{ $countPerStatus['pemilihan'] }})
+                </button>
+            @endif
+            @if ($countPerStatus['kontrak'] > 0)
+                <button type="button" class="btn btn-sm btn-outline-info py-0 px-2 chip-btn" data-chip="kontrak" style="font-size: 0.72rem; border-radius: 4px;">
+                    Kontrak ({{ $countPerStatus['kontrak'] }})
+                </button>
+            @endif
+            @if ($countPerStatus['pelaksanaan'] > 0)
+                <button type="button" class="btn btn-sm btn-outline-warning py-0 px-2 chip-btn" data-chip="pelaksanaan" style="font-size: 0.72rem; border-radius: 4px;">
+                    Pelaksanaan ({{ $countPerStatus['pelaksanaan'] }})
+                </button>
+            @endif
+            @if ($countPerStatus['selesai'] > 0)
+                <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 chip-btn" data-chip="selesai" style="font-size: 0.72rem; border-radius: 4px;">
+                    Selesai ({{ $countPerStatus['selesai'] }})
+                </button>
+            @endif
         </div>
     </div>
     <div class="card-body p-0" style="max-height: 640px; overflow-y: auto;">
@@ -73,14 +215,30 @@
             </tr></thead>
             <tbody>
                 @forelse ($pakets as $p)
-                    @php [$kunci, $labelDl, $warnaDl, $sisa] = $p->status_deadline; @endphp
+                    @php
+                        [$kunci, $labelDl, $warnaDl, $sisa] = $p->status_deadline;
+                        $urgensiRank = match($kunci) {
+                            'lewat' => 0,
+                            'mendesak' => 1,
+                            'mendekati' => 2,
+                            default => 3,
+                        };
+                        $isPerluAksi = $perluTindakanPaketIds->contains($p->id) ? '1' : '0';
+                    @endphp
                     <tr class="js-row"
-                        data-nama="{{ strtolower($p->nama_paket) }}"
+                        data-nama="{{ strtolower($p->nama_paket . ' ' . $p->kode_paket . ' ' . ($p->opd?->singkatan ?? '')) }}"
                         data-progres="{{ (int) $p->progress }}"
+                        data-status="{{ $p->status }}"
+                        data-perlu-aksi="{{ $isPerluAksi }}"
+                        data-urgensi="{{ $urgensiRank }}"
                         data-deadline="{{ $p->tanggal_selesai?->format('Y-m-d') ?? '9999-12-31' }}">
                         <td class="ps-3" style="max-width: 280px;">
                             <div class="fw-semibold small text-truncate" title="{{ $p->nama_paket }}">{{ $p->nama_paket }}</div>
                             <small class="text-secondary">{{ $p->kode_paket }} &bull; {{ $p->opd?->singkatan ?? '-' }} &bull; {{ \Illuminate\Support\Str::title(str_replace('_',' ',$p->metode)) }}</small>
+                            <div class="mt-1">
+                                <span class="badge text-bg-{{ status_badge_class($p->status) }}" style="font-size: 0.68rem;">{{ $p->status_label }}</span>
+                                <small class="text-secondary ms-1" style="font-size: 0.72rem;"><i class="bi bi-arrow-right-short text-primary"></i>{{ $p->next_action }}</small>
+                            </div>
                         </td>
                         <td style="min-width: 120px;">
                             <div class="tahapan-bar" role="img" aria-label="Progres {{ $p->progress }}%">
@@ -96,39 +254,16 @@
                         </td>
                         <td class="text-end pe-3 text-nowrap">
                             @if ($bolehSimpan)
-                                <div class="dropdown d-inline">
-                                    <button class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" data-bs-auto-close="outside" aria-expanded="false">
-                                        Simpan Progres
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
-                                        <form method="POST" action="{{ route('pokja.progres', $p) }}">
-                                            @csrf
-                                            <h6 class="dropdown-header px-0">Simpan Progres Pekerjaan</h6>
-                                            <div class="mb-2">
-                                                <label class="form-label small mb-1" for="prog-{{ $p->id }}">Progres (%)</label>
-                                                <input type="number" id="prog-{{ $p->id }}" name="progress" class="form-control form-control-sm"
-                                                       min="0" max="100" value="{{ $p->progress }}" required>
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label small mb-1" for="st-{{ $p->id }}">Status</label>
-                                                <select id="st-{{ $p->id }}" name="status" class="form-select form-select-sm js-status-progres" required>
-                                                    @foreach (['draft','persiapan','pemilihan','kontrak','pelaksanaan','selesai','batal'] as $s)
-                                                        <option value="{{ $s }}" {{ $p->status === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <small class="text-secondary" style="font-size:.7rem">Progres % otomatis menyesuaikan status</small>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label small mb-1" for="cat-{{ $p->id }}">Catatan</label>
-                                                <textarea id="cat-{{ $p->id }}" name="catatan" class="form-control form-control-sm" rows="2"
-                                                          placeholder="Kemajuan / kendala hari ini...">{{ old('catatan') }}</textarea>
-                                            </div>
-                                            <button type="submit" class="btn btn-sm btn-primary w-100">
-                                                <i class="bi bi-save me-1"></i>Simpan
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+                                <button type="button" class="btn btn-sm btn-primary js-btn-simpan-progres"
+                                        data-bs-toggle="modal" data-bs-target="#modal-simpan-progres"
+                                        data-action="{{ route('pokja.progres', $p) }}"
+                                        data-kode="{{ $p->kode_paket }}"
+                                        data-nama="{{ $p->nama_paket }}"
+                                        data-progres="{{ (int) $p->progress }}"
+                                        data-status="{{ $p->status }}"
+                                        title="Simpan atau perbarui progres pekerjaan">
+                                    <i class="bi bi-pencil-square me-1"></i>Simpan Progres
+                                </button>
                             @else
                                 <span class="badge bg-secondary-subtle text-secondary">Tinjauan</span>
                             @endif
@@ -151,7 +286,11 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="text-center text-secondary py-4">Tidak ada pekerjaan TA {{ date('Y') }} untuk Pokja ini</td></tr>
+                    <tr><td colspan="4" class="text-center text-secondary py-5">
+                        <i class="bi bi-clipboard2-check fs-1 d-block mb-2 text-muted"></i>
+                        <div class="fw-semibold text-dark mb-1">Belum Ada Pekerjaan Ditugaskan</div>
+                        <small class="text-secondary">Belum ada paket pengadaan TA {{ $tahun }} yang ditugaskan ke kelompok kerja ini. Hubungi Admin LPSE untuk penugasan paket baru.</small>
+                    </td></tr>
                 @endforelse
                 <tr id="baris-tak-ada" class="d-none">
                     <td colspan="4" class="text-center text-secondary py-4">
@@ -161,6 +300,60 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+{{-- Modal simpan progres pekerjaan --}}
+<div class="modal fade" id="modal-simpan-progres" tabindex="-1" aria-labelledby="modal-progres-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content border-0 shadow">
+            <form method="POST" id="form-simpan-progres" action="">
+                @csrf
+                <div class="modal-header py-2 px-3 bg-light border-bottom">
+                    <div>
+                        <h5 class="modal-title h6 mb-0 text-dark" id="modal-progres-title">
+                            <i class="bi bi-pencil-square text-primary me-1"></i>Simpan Progres Pekerjaan
+                        </h5>
+                        <small class="text-secondary d-block mt-1 font-monospace text-truncate" id="modal-progres-subjudul" style="font-size: 0.75rem; max-width: 380px;">-</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold mb-1" for="modal-input-progres">Progres Fisik (%) <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="modal-input-progres" name="progress" class="form-control"
+                                   min="0" max="100" required>
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold mb-1" for="modal-select-status">Status Tahapan <span class="text-danger">*</span></label>
+                        <select id="modal-select-status" name="status" class="form-select form-select-sm js-modal-status-progres" required>
+                            @foreach (['draft','persiapan','pemilihan','kontrak','pelaksanaan','selesai','batal'] as $s)
+                                <option value="{{ $s }}">{{ ucfirst($s) }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text text-muted" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle me-1"></i>Persentase progres akan menyesuaikan otomatis dengan tahapan yang dipilih.
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1" for="modal-textarea-catatan">Catatan Kemajuan / Kendala</label>
+                        <textarea id="modal-textarea-catatan" name="catatan" class="form-control form-control-sm" rows="3"
+                                  placeholder="Tuliskan kemajuan pekerjaan atau kendala lapangan hari ini..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 px-3 bg-light border-top d-flex justify-content-between">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Batal
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-check2-circle me-1"></i>Simpan Progres
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -191,6 +384,79 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Rincian Skor Risiko --}}
+<div class="modal fade" id="modal-rincian-risiko" tabindex="-1" aria-labelledby="modal-risiko-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header py-2 px-3 bg-light border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-exclamation text-{{ $rincianRisiko['warna'] }} fs-5"></i>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0 text-dark" id="modal-risiko-title">
+                            Rincian Skor Risiko — {{ $pokja->nama }}
+                        </h6>
+                        <small class="text-secondary" style="font-size: 0.72rem;">Kalkulasi otomatis 4 indikator operasional panitia</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-3 bg-{{ $rincianRisiko['warna'] }}-subtle border border-{{ $rincianRisiko['warna'] }}-subtle">
+                    <div>
+                        <div class="small fw-semibold text-{{ $rincianRisiko['warna'] }}">Skor Risiko Keseluruhan</div>
+                        <div class="display-6 fw-bold text-{{ $rincianRisiko['warna'] }} mb-0">{{ $rincianRisiko['total'] }}<span class="fs-6 fw-normal text-muted"> / 100</span></div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge text-bg-{{ $rincianRisiko['warna'] }} px-3 py-2 fs-6">{{ $rincianRisiko['label'] }}</span>
+                        <div class="text-secondary mt-1" style="font-size: 0.7rem;">Status Kepatuhan Pokja</div>
+                    </div>
+                </div>
+
+                <div class="small fw-bold text-dark mb-2"><i class="bi bi-bar-chart-steps me-1 text-primary"></i>Penyusun Skor Risiko:</div>
+                <div class="list-group list-group-flush mb-3 border rounded">
+                    @foreach ($rincianRisiko['komponen'] as $k => $komp)
+                        <div class="list-group-item px-3 py-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold text-dark small">{{ $komp['nama'] }}</span>
+                                <span class="badge {{ $komp['poin'] > 0 ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-success-subtle text-success border border-success-subtle' }}">
+                                    +{{ $komp['poin'] }} / {{ $komp['max'] }} poin
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-{{ $komp['poin'] > 0 ? ($komp['poin'] >= ($komp['max'] * 0.7) ? 'danger' : 'warning') : 'success' }}" style="width: {{ $komp['max'] > 0 ? min(100, ($komp['poin'] / $komp['max']) * 100) : 0 }}%;"></div>
+                            </div>
+                            <small class="text-secondary d-block mt-1" style="font-size: 0.72rem;">{{ $komp['deskripsi'] }}</small>
+                        </div>
+                    @endforeach
+                </div>
+
+                @if ($rincianRisiko['paket_delay']->isNotEmpty())
+                    <div class="mb-3">
+                        <div class="small fw-bold text-dark mb-1"><i class="bi bi-clock-history text-warning me-1"></i>Paket dengan Pergeseran Jadwal &gt;3x:</div>
+                        <ul class="list-group list-group-flush border rounded small">
+                            @foreach ($rincianRisiko['paket_delay'] as $pd)
+                                <li class="list-group-item py-1 px-3 d-flex justify-content-between align-items-center text-secondary">
+                                    <span class="text-truncate" style="max-width: 320px;">{{ $pd->nama_paket }}</span>
+                                    <span class="font-monospace" style="font-size: 0.7rem;">{{ $pd->kode_paket }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <div class="p-2 rounded bg-light border small text-secondary" style="font-size: 0.75rem;">
+                    <strong class="text-dark"><i class="bi bi-lightbulb-fill me-1 text-warning"></i>Tips Mitigasi Taktis:</strong>
+                    Selesaikan pekerjaan yang melampaui deadline dan tanggapi sanggahan aktif untuk menurunkan skor risiko panitia ke kategori <strong>RENDAH</strong>.
+                </div>
+            </div>
+            <div class="modal-footer py-1 px-3 bg-light">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @include('pesan._chat-script')
 @endsection
 
@@ -198,8 +464,6 @@
 <style>
     .tahapan-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; background: #f8f9fa; }
     .tahapan-seg { display: block; height: 100%; border-radius: 2px; }
-    /* Dropdown form supaya klik di dalam tidak menutup dropdown */
-    .dropdown-menu form { padding: 0; margin: 0; }
 
     /* Header tabel tetap terlihat saat kontainer di-scroll */
     #tabel-paket thead th {
@@ -224,24 +488,49 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     'use strict';
-    // ====== Pilih Status -> angka Progres (%) menyesuaikan otomatis ======
+    // ====== Modal Simpan Progres ======
     // Pemetaan konsisten dengan logika model PaketPengadaan (tahapan progres):
     // draft=0, persiapan=10, pemilihan=30, kontrak=50, pelaksanaan=70, selesai=100, batal=0
     const PETA_STATUS_PROGRES = {
         draft: 0, persiapan: 10, pemilihan: 30, kontrak: 50,
         pelaksanaan: 70, selesai: 100, batal: 0
     };
-    document.querySelectorAll('.js-status-progres').forEach(function (sel) {
-        sel.addEventListener('change', function () {
-            const form = sel.closest('form');
-            const prog = form ? form.querySelector('input[name="progress"]') : null;
-            if (prog && sel.value in PETA_STATUS_PROGRES) {
-                prog.value = PETA_STATUS_PROGRES[sel.value];
-                prog.classList.add('border-primary');           // sorot sebentar agar terlihat berubah
-                setTimeout(() => prog.classList.remove('border-primary'), 1200);
-            }
+    const modalProgres = document.getElementById('modal-simpan-progres');
+    if (modalProgres) {
+        const formProgres = document.getElementById('form-simpan-progres');
+        const titleSub = document.getElementById('modal-progres-subjudul');
+        const inputProg = document.getElementById('modal-input-progres');
+        const selectStatus = document.getElementById('modal-select-status');
+        const txtCatatan = document.getElementById('modal-textarea-catatan');
+
+        modalProgres.addEventListener('show.bs.modal', function (ev) {
+            const btn = ev.relatedTarget;
+            if (!btn) return;
+
+            const action = btn.dataset.action || '';
+            const kode = btn.dataset.kode || '';
+            const nama = btn.dataset.nama || '';
+            const progres = btn.dataset.progres || 0;
+            const status = btn.dataset.status || 'draft';
+
+            formProgres.action = action;
+            titleSub.textContent = kode + (nama ? ' • ' + nama : '');
+            titleSub.title = nama;
+            inputProg.value = progres;
+            selectStatus.value = status;
+            txtCatatan.value = '';
         });
-    });
+
+        if (selectStatus && inputProg) {
+            selectStatus.addEventListener('change', function () {
+                if (selectStatus.value in PETA_STATUS_PROGRES) {
+                    inputProg.value = PETA_STATUS_PROGRES[selectStatus.value];
+                    inputProg.classList.add('border-primary');
+                    setTimeout(() => inputProg.classList.remove('border-primary'), 1200);
+                }
+            });
+        }
+    }
 
     // Modal riwayat: ambil data via API
     const modal = document.getElementById('modal-riwayat');
@@ -288,27 +577,79 @@ document.addEventListener('DOMContentLoaded', function () {
         judulPesan.textContent = 'Diskusi Pekerjaan';
     });
 
-    // ====== Pencarian cepat + pengurutan tabel ======
+    // ====== Pencarian cepat + Filter Chip Tahapan + Pengurutan Tabel ======
     const inputCari = document.getElementById('cari-paket');
     const tabel = document.getElementById('tabel-paket');
     const tbody = tabel.querySelector('tbody');
     const baris = Array.from(tbody.querySelectorAll('tr.js-row'));
     const takAda = document.getElementById('baris-tak-ada');
     const info = document.getElementById('info-jumlah');
+    const chipBtns = document.querySelectorAll('.chip-btn');
+    const cardFilters = document.querySelectorAll('.js-card-filter');
 
-    function terapkanCari() {
+    let currentChip = 'semua';
+
+    function terapkanFilter() {
         const q = inputCari.value.trim().toLowerCase();
         let n = 0;
+
         baris.forEach(function (tr) {
-            const cocok = !q || tr.textContent.toLowerCase().includes(q);
-            tr.classList.toggle('d-none', !cocok);
-            if (cocok) n++;
+            const namaCocok = !q || tr.textContent.toLowerCase().includes(q);
+            let chipCocok = true;
+
+            if (currentChip === 'semua') {
+                chipCocok = true;
+            } else if (currentChip === 'perlu_aksi') {
+                chipCocok = (tr.dataset.perluAksi === '1');
+            } else if (currentChip === 'aktif') {
+                chipCocok = ['persiapan', 'pemilihan', 'kontrak', 'pelaksanaan'].includes(tr.dataset.status);
+            } else {
+                chipCocok = (tr.dataset.status === currentChip);
+            }
+
+            const tampil = namaCocok && chipCocok;
+            tr.classList.toggle('d-none', !tampil);
+            if (tampil) n++;
         });
+
         takAda.classList.toggle('d-none', n > 0);
-        info.textContent = q ? n + ' / ' + baris.length : baris.length;
-        info.title = q ? `Menampilkan ${n} dari ${baris.length} pekerjaan` : 'Jumlah pekerjaan yang ditampilkan';
+        info.textContent = (q || currentChip !== 'semua') ? n + ' / ' + baris.length + ' paket' : baris.length + ' paket';
+        info.title = `Menampilkan ${n} dari ${baris.length} pekerjaan`;
     }
-    inputCari.addEventListener('input', terapkanCari);
+
+    inputCari.addEventListener('input', terapkanFilter);
+
+    // Filter Chips Event
+    chipBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentChip = this.dataset.chip;
+            chipBtns.forEach(b => {
+                b.classList.remove('btn-dark', 'active');
+                if (!b.className.includes('btn-outline-')) {
+                    // reset styling jika bukan outline
+                }
+            });
+            this.classList.add('btn-dark', 'active');
+            terapkanFilter();
+        });
+    });
+
+    // Metric Cards Event (klik kartu langsung memfilter tabel)
+    cardFilters.forEach(function (card) {
+        card.addEventListener('click', function () {
+            const targetFilter = this.dataset.filter;
+            const targetChip = Array.from(chipBtns).find(b => b.dataset.chip === targetFilter);
+            if (targetChip) {
+                targetChip.click();
+            } else if (targetFilter === 'aktif') {
+                currentChip = 'aktif';
+                chipBtns.forEach(b => b.classList.remove('btn-dark', 'active'));
+                terapkanFilter();
+            }
+            // Scroll halus ke tabel
+            tabel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    });
 
     // Tekan "/" untuk langsung fokus ke kolom pencarian
     document.addEventListener('keydown', function (e) {
@@ -318,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Urutkan kolom: Pekerjaan (teks), Progres (angka), Deadline (tanggal)
+    // Urutkan kolom manual saat header diklik: Pekerjaan (teks), Progres (angka), Deadline (tanggal)
     let sortKey = null, sortDir = 1;
     tabel.querySelectorAll('th[data-sort]').forEach(function (th) {
         th.addEventListener('click', function () {
@@ -337,9 +678,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Urutan awal: deadline paling dekat di atas (pekerjaan tanpa deadline di bawah)
-    const thDeadline = tabel.querySelector('th[data-sort="deadline"]');
-    if (thDeadline) thDeadline.click();
+    // Catatan: Halaman dibuka dengan mempertahankan urutan Triage Bawaan
+    // (Melampaui Deadline -> Mendesak -> Mendekati -> Normal) dari server tanpa diacak ulang.
 });
 </script>
 @endpush
