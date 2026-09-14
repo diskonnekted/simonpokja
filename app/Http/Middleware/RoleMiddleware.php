@@ -23,6 +23,9 @@ class RoleMiddleware
         }
 
         if ($peran !== [] && ! in_array($user->role, $peran, true)) {
+            if ($user->isPokja()) {
+                return redirect()->route('pokja.dasbor')->with('warning', 'Halaman tersebut khusus Administrator. Anda telah diarahkan ke Dasbor Pokja.');
+            }
             abort(403, 'Anda tidak memiliki kewenangan untuk mengakses halaman ini.');
         }
 

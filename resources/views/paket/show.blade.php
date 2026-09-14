@@ -1,6 +1,23 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Paket')
+@section('title', 'Detail Paket — ' . $paket->kode_paket)
+
+@section('breadcrumb')
+<ul class="breadcrumb-links">
+    <li><a href="{{ route('dashboard') }}"><i class="bi bi-house-door me-1"></i>Beranda</a></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li><a href="{{ route('paket.index') }}">Paket Pengadaan</a></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li class="active">{{ $paket->kode_paket }}</li>
+</ul>
+<div class="workflow-phase-steps d-none d-md-inline-flex">
+    @foreach ($paket->tahapan_progres as $t)
+        <span class="workflow-phase-step {{ $t['status'] === 'selesai' ? 'completed' : ($t['status'] === 'proses' ? 'active' : '') }}">
+            @if($t['status'] === 'selesai')<i class="bi bi-check me-1"></i>@endif{{ $t['nama'] }}
+        </span>
+    @endforeach
+</div>
+@endsection
 
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-2">
@@ -18,9 +35,17 @@
     </div>
     <div class="d-flex gap-2">
         <a href="{{ route('paket.edit', $paket) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
-        <form action="{{ route('paket.destroy', $paket) }}" method="POST" onsubmit="return confirm('Hapus paket ini?')">
+        <form action="{{ route('paket.destroy', $paket) }}" method="POST">
             @csrf @method('DELETE')
-            <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+            <button type="button" class="btn btn-outline-danger btn-sm" title="Hapus Paket"
+                    data-confirm-modal
+                    data-confirm-title="Hapus Paket Pengadaan"
+                    data-confirm-message="Yakin ingin menghapus paket &quot;{{ $paket->nama_paket }}&quot;? Data riwayat, perubahan, dan sanggahan terkait juga akan terpengaruh."
+                    data-confirm-btn-text="Hapus Paket"
+                    data-confirm-btn-class="btn-danger"
+                    data-confirm-icon="bi-trash-fill text-danger">
+                <i class="bi bi-trash"></i>
+            </button>
         </form>
     </div>
 </div>
@@ -109,7 +134,7 @@
                         <div class="border rounded p-2 text-center h-100">
                             <div class="small text-secondary">Skor Risiko</div>
                             <div class="fw-bold fs-5">{{ $paket->pokja->skor_risiko }}</div>
-                            <span class="badge text-bg-{{ $paket->pokja->warna_risiko }}">{{ $paket->pokja->label_risiko }}</span>
+                            <span class="badge badge-risiko-{{ strtolower($paket->pokja->label_risiko) }}">{{ $paket->pokja->label_risiko }}</span>
                         </div>
                     </div>
                     <div class="col-6 col-lg-3">

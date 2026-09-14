@@ -126,18 +126,23 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="status" class="form-select" required>
+                        <label class="form-label" for="selectStatus">Status <span class="text-danger">*</span></label>
+                        <select name="status" id="selectStatus" class="form-select" required>
                             @foreach (['draft' => 'Draft', 'persiapan' => 'Persiapan', 'pemilihan' => 'Pemilihan', 'kontrak' => 'Kontrak', 'pelaksanaan' => 'Pelaksanaan', 'selesai' => 'Selesai', 'batal' => 'Batal'] as $val => $label)
                                 <option value="{{ $val }}" {{ old('status', $paket->status ?? 'draft') == $val ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label d-flex justify-content-between">
-                            Progress <span class="fw-bold" id="progressVal">{{ old('progress', $paket->progress ?? 0) }}%</span>
-                        </label>
-                        <input type="range" name="progress" min="0" max="100" step="5"
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0" for="progressNumber">Progress Fisik (%) <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm" style="width: 105px;">
+                                <input type="number" id="progressNumber" class="form-control text-end fw-bold text-primary font-monospace"
+                                       min="0" max="100" value="{{ old('progress', $paket->progress ?? 0) }}">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        <input type="range" name="progress" min="0" max="100" step="1"
                                value="{{ old('progress', $paket->progress ?? 0) }}" class="form-range" id="progressRange">
                     </div>
                     <div class="mb-3">
@@ -164,10 +169,46 @@
 
 @push('scripts')
 <script>
-    // Live progress slider
+    // Pemetaan standar status tahapan ke angka progres fisik (%)
+    const PETA_STATUS_PROGRES = {
+        draft: 0,
+        persiapan: 10,
+        pemilihan: 30,
+        kontrak: 50,
+        pelaksanaan: 70,
+        selesai: 100,
+        batal: 0
+    };
+
+    const selStatus = document.getElementById('selectStatus');
     const range = document.getElementById('progressRange');
-    const label = document.getElementById('progressVal');
-    range?.addEventListener('input', () => label.textContent = range.value + '%');
+    const num = document.getElementById('progressNumber');
+
+    function setProgressVal(v) {
+        v = Math.min(100, Math.max(0, parseInt(v, 10) || 0));
+        if (range) range.value = v;
+        if (num) num.value = v;
+    }
+
+    range?.addEventListener('input', () => {
+        if (num) num.value = range.value;
+    });
+
+    num?.addEventListener('input', () => {
+        if (range) range.value = num.value;
+    });
+
+    // Otomatis sinkronisasi nilai progress saat status dipilih
+    selStatus?.addEventListener('change', function () {
+        const s = selStatus.value;
+        if (s in PETA_STATUS_PROGRES) {
+            setProgressVal(PETA_STATUS_PROGRES[s]);
+            if (num) {
+                num.classList.add('border-primary');
+                setTimeout(() => num.classList.remove('border-primary'), 1200);
+            }
+        }
+    });
 
     // Bootstrap validation
     document.querySelectorAll('.needs-validation').forEach(form => {

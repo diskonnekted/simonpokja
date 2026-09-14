@@ -13,6 +13,7 @@ use App\Http\Controllers\PemantauanController;
 use App\Http\Controllers\PetaController;
 use App\Http\Controllers\PokjaDashboardController;
 use App\Http\Controllers\PesanPaketController;
+use App\Http\Controllers\NotifikasiController;
 
 // ================= AUTH =================
 Route::middleware('guest')->group(function () {
@@ -20,17 +21,22 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
-// ================= DASBOR POKJA (admin boleh meninjau) =================
+// ================= BERANDA & DASBOR POKJA =================
 Route::middleware('auth')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('pokja-dasbor', [PokjaDashboardController::class, 'index'])->name('pokja.dasbor');
     Route::get('pokja-dasbor/paket/{paket}/riwayat', [PokjaDashboardController::class, 'riwayat'])->name('pokja.riwayat');
+    Route::get('pokja-sanggahan', [PokjaDashboardController::class, 'sanggahan'])->name('pokja.sanggahan');
+    Route::post('pokja-sanggahan/{sanggahan}/jawab', [PokjaDashboardController::class, 'jawabSanggahan'])->name('pokja.sanggahan.jawab');
+    Route::get('pokja-jadwal', [PokjaDashboardController::class, 'jadwal'])->name('pokja.jadwal');
+    Route::post('pokja-jadwal/{paket}/perubahan', [PokjaDashboardController::class, 'simpanPerubahanJadwal'])->name('pokja.jadwal.perubahan');
+    Route::get('pokja-laporan', [PokjaDashboardController::class, 'laporan'])->name('pokja.laporan');
 });
 
 // ================= APLIKASI (hanya admin) =================
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // ===== DASBOR PETA KEGIATAN (menu teratas) =====
     Route::get('peta-kegiatan', [PetaController::class, 'index'])->name('peta.index');
@@ -74,8 +80,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
 
-    // Audit Log
+    // Audit Log & Monitoring Sesi
     Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
+    Route::post('audit/bersihkan-sesi', [AuditLogController::class, 'bersihkanSesi'])->name('audit.bersihkanSesi');
+    Route::delete('audit/putus-sesi/{sessionId}', [AuditLogController::class, 'putusSesi'])->name('audit.putusSesi');
 });
 
 // ================= SIMPAN PROGRES (khusus user pokja) =================
@@ -88,3 +96,14 @@ Route::middleware(['auth', 'role:admin,pokja'])->group(function () {
     Route::get('paket/{paket}/pesan', [PesanPaketController::class, 'index'])->name('pesan.index');
     Route::post('paket/{paket}/pesan', [PesanPaketController::class, 'store'])->name('pesan.store');
 });
+
+// ================= NOTIFIKASI & WEB PUSH (semua user login) =================
+Route::middleware('auth')->group(function () {
+    Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+    Route::post('notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca');
+    Route::post('notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('notifikasi.bacaSemua');
+    Route::get('api/push/vapid-key', [NotifikasiController::class, 'vapidPublicKey'])->name('push.vapidKey');
+    Route::post('api/push/subscribe', [NotifikasiController::class, 'subscribe'])->name('push.subscribe');
+    Route::post('api/push/unsubscribe', [NotifikasiController::class, 'unsubscribe'])->name('push.unsubscribe');
+});
+

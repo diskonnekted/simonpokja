@@ -1,6 +1,23 @@
 @extends('layouts.app')
 
-@section('title', 'Pemantauan Paket')
+@section('title', 'Pemantauan Paket — ' . $paket->kode_paket)
+
+@section('breadcrumb')
+<ul class="breadcrumb-links">
+    <li><a href="{{ route('dashboard') }}"><i class="bi bi-house-door me-1"></i>Beranda</a></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li><a href="{{ route('pemantauan.index') }}">Pemantauan</a></li>
+    <li class="sep"><i class="bi bi-chevron-right"></i></li>
+    <li class="active">{{ $paket->kode_paket }}</li>
+</ul>
+<div class="workflow-phase-steps d-none d-md-inline-flex">
+    @foreach ($paket->tahapan_progres as $t)
+        <span class="workflow-phase-step {{ $t['status'] === 'selesai' ? 'completed' : ($t['status'] === 'proses' ? 'active' : '') }}">
+            @if($t['status'] === 'selesai')<i class="bi bi-check me-1"></i>@endif{{ $t['nama'] }}
+        </span>
+    @endforeach
+</div>
+@endsection
 
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-2">
@@ -9,14 +26,14 @@
         <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <h4 class="fw-bold mb-0">{{ $paket->nama_paket }}</h4>
-                <span class="badge text-bg-{{ ['rendah' => 'success', 'sedang' => 'warning text-dark', 'kritis' => 'danger'][$paket->risiko] }}">{{ ucfirst($paket->risiko) }}</span>
+                <span class="badge badge-risiko-{{ $paket->risiko }}">{{ ucfirst($paket->risiko) }}</span>
                 @if ($paket->tender_gagal)
                     <span class="badge text-bg-danger"><i class="bi bi-x-octagon me-1"></i>Tender Gagal</span>
                 @endif
             </div>
             <p class="text-secondary mb-0 small">
                 {{ $paket->kode_paket }} &bull; {{ $paket->opd->nama ?? '-' }} &bull;
-                Pokja: <a href="{{ route('pokja.show', $paket->pokja) }}" class="text-decoration-none">{{ $paket->pokja->nama ?? '-' }}</a> &bull;
+                Pokja: @if($paket->pokja)<a href="{{ route('pokja.show', $paket->pokja) }}" class="text-decoration-none">{{ $paket->pokja->nama }}</a>@else<span class="text-muted">-</span>@endif &bull;
                 {{ format_rupiah($paket->pagu) }}
             </p>
         </div>
@@ -60,7 +77,7 @@
                             </div>
                         </li>
                     @empty
-                        <li class="list-group-item text-center text-secondary py-4">Tidak ada perubahan jadwal ✓</li>
+                        <li class="list-group-item text-center text-secondary py-4"><i class="bi bi-check-circle text-success me-1"></i>Tidak ada perubahan jadwal</li>
                     @endforelse
                 </ul>
             </div>
@@ -165,6 +182,49 @@
                         <button class="btn btn-info btn-sm text-white w-100"><i class="bi bi-plus-lg me-1"></i>Catat Sanggahan Baru</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ===== R3: Kronologi & Timeline Perjalanan Paket ===== --}}
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white pt-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Kronologi &amp; Riwayat Terpadu Paket
+                </h6>
+                <span class="badge text-bg-primary">{{ $timeline->count() }} Peristiwa</span>
+            </div>
+            <div class="card-body p-3">
+                @if ($timeline->isEmpty())
+                    <div class="text-center text-secondary py-4">
+                        <i class="bi bi-calendar-x fs-2 d-block mb-1 text-muted"></i>
+                        Belum ada catatan peristiwa atau riwayat untuk paket ini.
+                    </div>
+                @else
+                    <div class="timeline-vertical">
+                        @foreach ($timeline as $ev)
+                            <div class="timeline-item">
+                                <span class="timeline-marker {{ $ev['marker'] }}"></span>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <i class="bi {{ $ev['ikon'] }} text-secondary"></i>
+                                            <span class="fw-semibold">{{ $ev['judul'] }}</span>
+                                            <span class="badge text-bg-{{ $ev['badge'] }}" style="font-size: 0.68rem;">{{ $ev['tipe_label'] }}</span>
+                                        </div>
+                                        <small class="text-secondary text-nowrap font-monospace" style="font-size: 0.75rem;">
+                                            {{ \Carbon\Carbon::parse($ev['tanggal'])->translatedFormat('d M Y, H:i') }}
+                                        </small>
+                                    </div>
+                                    <div class="text-secondary small">{!! $ev['deskripsi'] !!}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
     </div>

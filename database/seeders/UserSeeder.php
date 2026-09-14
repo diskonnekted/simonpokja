@@ -82,13 +82,14 @@ class UserSeeder extends Seeder
                 }
                 $riwayat[] = $progresAkhir;
 
-                $statusRiwayat = ['proses', 'proses', $paket->status];
                 foreach ($riwayat as $k => $nilai) {
+                    $isTerakhir = ($k === count($riwayat) - 1);
+                    $statusItem = $isTerakhir ? $paket->status : ($paket->status === 'selesai' ? 'pelaksanaan' : $paket->status);
                     ProgresPekerjaan::create([
                         'paket_id' => $paketId,
                         'user_id' => $user->id,
                         'progress' => min(100, max(0, $nilai)),
-                        'status' => $statusRiwayat[$k] ?? 'proses',
+                        'status' => $statusItem,
                         'catatan' => $catatanContoh[($i + $j + $k) % count($catatanContoh)],
                         'created_at' => now()->subDays(21 - $k * 7),
                         'updated_at' => now()->subDays(21 - $k * 7),

@@ -12,8 +12,9 @@ class PaketPengadaan extends Model
     protected $table = 'paket_pengadaans';
 
     protected $fillable = [
-        'kode_paket', 'nama_paket', 'opd_id', 'penyedia_id', 'jenis', 'metode',
+        'kode_paket', 'nama_paket', 'opd_id', 'pokja_id', 'penyedia_id', 'jenis', 'metode',
         'sumber_dana', 'pagu', 'hps', 'nilai_kontrak', 'tahun_anggaran', 'status',
+        'risiko', 'tender_gagal', 'tahap_tender',
         'progress', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'keterangan',
         'latitude', 'longitude', 'desa', 'kecamatan',
     ];
@@ -242,6 +243,23 @@ class PaketPengadaan extends Model
             'selesai' => '#198754', // hijau bootstrap success (4.53:1 vs putih)
             'proses' => '#0d6efd',  // biru bootstrap primary (4.50:1 vs putih)
             default => '#868e96',   // abu (3.15:1 vs #f8f9fa, lolos non-text 3:1)
+        };
+    }
+
+    /**
+     * Petunjuk aksi selanjutnya berdasarkan status paket saat ini.
+     */
+    public function getNextActionAttribute(): string
+    {
+        return match ($this->status) {
+            'draft' => 'Lengkapi dokumen persiapan',
+            'persiapan' => 'Unggah ke SPSE & mulai pemilihan',
+            'pemilihan' => 'Evaluasi penawaran & tentukan pemenang',
+            'kontrak' => 'Tanda tangani SPK & mulai pelaksanaan',
+            'pelaksanaan' => 'Pantau progres fisik mingguan',
+            'selesai' => 'Serah terima & tutup paket',
+            'batal' => 'Evaluasi penyebab & laporan kegagalan',
+            default => 'Tinjau status pekerjaan',
         };
     }
 

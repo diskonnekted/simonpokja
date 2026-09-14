@@ -15,20 +15,55 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        $loginInput = trim($request->input('email') ?? '');
+        $password = $request->input('password');
+
+        if (empty($loginInput) || empty($password)) {
+            return back()->withErrors([
+                'email' => 'Email/Username dan password wajib diisi.',
+            ])->withInput();
+        }
+
+        // Resolusi alias HANYA diizinkan pada mode local/development
+        $email = $loginInput;
+        if (app()->isLocal() && !str_contains($loginInput, '@')) {
+            $cleaned = strtolower(str_replace([' ', '-', '_'], '', $loginInput));
+            if ($cleaned === 'admin') {
+                $email = 'admin@banjarnegara.go.id';
+            } elseif (preg_match('/^pokja([1-5])$/', $cleaned, $m)) {
+                $email = "pokja{$m[1]}@banjarnegara.go.id";
+            } else {
+                $userByName = User::where('name', 'like', "%{$loginInput}%")->first();
+                if ($userByName) {
+                    $email = $userByName->email;
+                }
+            }
+        }
+
+        $credentials = [
+            'email' => $email,
+            'password' => $password,
+        ];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            // Redirect sesuai peran: admin -> peta kegiatan, pokja -> dasbor pokja
-            return redirect()->intended($request->user()->routeBeranda());
+            $user = Auth::user();
+
+            // Jika user adalah Pokja, pastikan tidak diarahkan ke intended URL admin
+            $intended = session('url.intended');
+            if ($user->isPokja()) {
+                if (!$intended || !str_contains($intended, 'pokja-dasbor')) {
+                    session()->forget('url.intended');
+                    return redirect()->route('pokja.dasbor');
+                }
+            }
+
+            return redirect()->intended($user->routeBeranda());
         }
 
         return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->onlyInput('email');
+            'email' => 'Username/Email atau password salah. (Gunakan password default: password)',
+        ])->withInput();
     }
 
     public function logout(Request $request)

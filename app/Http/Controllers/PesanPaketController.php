@@ -68,6 +68,35 @@ class PesanPaketController extends Controller
             'pesan' => $data['pesan'],
         ]);
 
+        // Notifikasi ke lawan bicara
+        try {
+            $notifService = app(\App\Services\NotificationService::class);
+            $ringkasPesan = \Illuminate\Support\Str::limit($data['pesan'], 90);
+            if ($request->user()->isAdmin()) {
+                if ($paket->pokja_id) {
+                    $notifService->kirimKePokja(
+                        $paket->pokja_id,
+                        'Pesan dari Kepala LPSE',
+                        "{$paket->kode_paket}: {$ringkasPesan}",
+                        route('pokja.dasbor') . "?pokja={$paket->pokja_id}",
+                        'pesan',
+                        'info'
+                    );
+                }
+            } else {
+                $namaPengirim = $paket->pokja?->nama ?? 'Pokja';
+                $notifService->kirimKeAdmin(
+                    "Pesan dari {$namaPengirim}",
+                    "{$paket->kode_paket}: {$ringkasPesan}",
+                    route('pemantauan.show', $paket),
+                    'pesan',
+                    'info'
+                );
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal kirim notifikasi pesan: ' . $e->getMessage());
+        }
+
         if ($request->expectsJson()) {
             return response()->json(['ok' => true, 'id' => $pesan->id], 201);
         }

@@ -91,6 +91,7 @@
                             <td class="text-nowrap" data-label="Kontrak">{{ $p->nilai_kontrak ? format_rupiah_singkat($p->nilai_kontrak) : '-' }}</td>
                             <td data-label="Status">
                                 <span class="badge text-bg-{{ status_badge_class($p->status) }}">{{ $p->status_label }}</span>
+                                <small class="text-secondary d-block mt-1" style="font-size: 0.72rem;"><i class="bi bi-arrow-right-short text-primary"></i>{{ $p->next_action }}</small>
                             </td>
                             <td data-label="Progress">
                                 <div class="d-flex align-items-center gap-2 justify-content-center">
@@ -102,15 +103,28 @@
                             </td>
                             <td class="pe-3 text-end text-nowrap" data-label="Aksi">
                                 <a href="{{ route('paket.edit', $p) }}" class="btn btn-sm btn-light" title="Edit"><i class="bi bi-pencil"></i></a>
-                                <form action="{{ route('paket.destroy', $p) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus paket ini?')">
+                                <form action="{{ route('paket.destroy', $p) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-light text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light text-danger" title="Hapus Paket"
+                                            data-confirm-modal
+                                            data-confirm-title="Hapus Paket Pengadaan"
+                                            data-confirm-message="Yakin ingin menghapus paket &quot;{{ $p->nama_paket }}&quot;? Data yang dihapus tidak dapat dipulihkan."
+                                            data-confirm-btn-text="Hapus Paket"
+                                            data-confirm-btn-class="btn-danger"
+                                            data-confirm-icon="bi-trash-fill text-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
                     @empty
                         <tr><td colspan="7" class="text-center text-secondary py-5">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>Tidak ada paket yang cocok dengan filter
+                            <i class="bi bi-folder2-open fs-1 d-block mb-2 text-muted"></i>
+                            <div class="fw-semibold text-dark mb-1">Belum Ada Paket Pengadaan</div>
+                            <p class="text-secondary small mb-3">Tidak ada paket yang cocok dengan filter aktif, atau belum ada paket yang ditambahkan.</p>
+                            <a href="{{ route('paket.create') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i>Tambah Paket Baru
+                            </a>
                         </td></tr>
                     @endforelse
                 </tbody>

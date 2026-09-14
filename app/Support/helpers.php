@@ -45,14 +45,14 @@ if (!function_exists('status_badge_class')) {
     function status_badge_class($status)
     {
         return match ($status) {
-            'draft' => 'secondary',
-            'persiapan' => 'info',
-            'pemilihan' => 'warning text-dark',
-            'kontrak' => 'primary',
-            'pelaksanaan' => 'purple',
-            'selesai' => 'success',
-            'batal' => 'danger',
-            default => 'secondary',
+            'draft' => 'secondary status-draft',
+            'persiapan' => 'info status-persiapan',
+            'pemilihan' => 'warning status-pemilihan',
+            'kontrak' => 'primary status-kontrak',
+            'pelaksanaan' => 'purple status-pelaksanaan',
+            'selesai' => 'success status-selesai',
+            'batal' => 'danger status-batal',
+            default => 'secondary status-draft',
         };
     }
 }

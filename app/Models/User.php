@@ -63,6 +63,21 @@ class User extends Authenticatable
         return $this->hasMany(PesanPaket::class);
     }
 
+    public function notifikasis(): HasMany
+    {
+        return $this->hasMany(Notifikasi::class)->latest();
+    }
+
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
+    public function unreadNotifikasiCount(): int
+    {
+        return $this->notifikasis()->unread()->count();
+    }
+
     /**
      * Arah redirect setelah login sesuai peran.
      */

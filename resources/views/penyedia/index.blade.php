@@ -54,7 +54,7 @@
                             </td>
                             <td><small>{{ $pen->npwp ?? '-' }}</small></td>
                             <td>
-                                <span class="badge {{ $pen->kualifikasi == 'besar' ? 'text-bg-dark' : ($pen->kualifikasi == 'menengah' ? 'text-bg-info' : 'text-bg-light text-dark') }}">
+                                <span class="badge {{ $pen->kualifikasi == 'besar' ? 'badge-kual-besar' : ($pen->kualifikasi == 'menengah' ? 'badge-kual-menengah' : 'badge-kual-kecil') }}">
                                     {{ ucfirst($pen->kualifikasi) }}
                                 </span>
                             </td>

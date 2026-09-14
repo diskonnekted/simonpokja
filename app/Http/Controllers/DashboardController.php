@@ -10,6 +10,10 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && $request->user()->isPokja()) {
+            return redirect()->route('pokja.dasbor');
+        }
+
         $tahun = $request->get('tahun', date('Y'));
 
         $base = PaketPengadaan::query()->tahun($tahun);

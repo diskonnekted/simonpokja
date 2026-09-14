@@ -40,8 +40,20 @@
             <p class="text-secondary mb-0">Kabupaten Banjarnegara</p>
         </div>
 
+        @if (session('warning'))
+            <div class="alert alert-warning py-2 small">
+                <i class="bi bi-exclamation-circle me-1"></i>{{ session('warning') }}
+            </div>
+        @endif
+
+        @if (session('success'))
+            <div class="alert alert-success py-2 small">
+                <i class="bi bi-check-circle me-1"></i>{{ session('success') }}
+            </div>
+        @endif
+
         @if ($errors->any())
-            <div class="alert alert-danger py-2">
+            <div class="alert alert-danger py-2 small">
                 <i class="bi bi-exclamation-triangle me-1"></i>{{ $errors->first() }}
             </div>
         @endif
@@ -49,17 +61,17 @@
         <form action="{{ route('login') }}" method="POST">
             @csrf
             <div class="mb-3">
-                <label class="form-label fw-semibold">Email</label>
+                <label class="form-label fw-semibold">Email atau Username</label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                    <input type="email" name="email" value="{{ old('email') }}" class="form-control" placeholder="admin@banjarnegara.go.id" required autofocus>
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" name="email" id="loginInput" value="{{ old('email') }}" class="form-control" placeholder="admin / pokja1 / email resmi" required autofocus>
                 </div>
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Password</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-key"></i></span>
-                    <input type="password" name="password" class="form-control" placeholder="Password" required>
+                    <input type="password" name="password" id="passwordInput" class="form-control" placeholder="Password" required>
                 </div>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -73,17 +85,45 @@
             </button>
         </form>
 
-        <hr class="my-4">
-        <div class="small text-secondary">
-            <p class="fw-semibold mb-2"><i class="bi bi-info-circle me-1"></i>Jenis Akun:</p>
-            <p class="mb-1"><span class="badge bg-danger">Administrator</span> Memantau seluruh kinerja Pokja, peta kegiatan, dan laporan.</p>
-            <p class="mb-0"><span class="badge bg-primary">Pokja</span> Mengelola progres pekerjaan panitia pada dasbor masing-masing.</p>
+        @if (app()->isLocal())
+        <div class="mt-4 p-3 bg-light rounded-3 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold small text-dark"><i class="bi bi-key-fill text-primary me-1"></i>Pilihan Cepat Masuk (Mode Dev):</span>
+                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.72rem;">Password: password</span>
+            </div>
+            <div class="d-flex flex-wrap gap-1 mb-2">
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fill-btn" data-login="admin@banjarnegara.go.id" style="font-size: 0.75rem;">
+                    Admin
+                </button>
+                @for ($i = 1; $i <= 5; $i++)
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fill-btn" data-login="pokja{{ $i }}@banjarnegara.go.id" style="font-size: 0.75rem;">
+                        Pokja {{ $i }}
+                    </button>
+                @endfor
+            </div>
+            <div class="text-secondary" style="font-size: 0.72rem;">
+                * Hanya aktif pada mode pengembangan (local). Di production wajib menggunakan email resmi terdaftar.
+            </div>
         </div>
+        @endif
+
         <hr class="my-4">
         <p class="text-center text-secondary small mb-0">
             <i class="bi bi-shield-lock me-1"></i>
             Sistem Monitoring Pengadaan Barang/Jasa
         </p>
     </div>
+
+    @if (app()->isLocal())
+    <script>
+        document.querySelectorAll('.fill-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.getElementById('loginInput').value = this.getAttribute('data-login');
+                document.getElementById('passwordInput').value = 'password';
+                document.getElementById('loginInput').focus();
+            });
+        });
+    </script>
+    @endif
 </body>
 </html>

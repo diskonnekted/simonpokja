@@ -8,6 +8,7 @@ use App\Models\Tahapan;
 use App\Models\Evaluasi;
 use App\Models\Opd;
 use App\Models\Penyedia;
+use App\Models\ProgresPekerjaan;
 
 class PaketController extends Controller
 {
@@ -86,7 +87,18 @@ class PaketController extends Controller
         $validated['hps'] = empty($request->hps) ? 0 : $request->hps;
         $validated['nilai_kontrak'] = empty($request->nilai_kontrak) ? 0 : $request->nilai_kontrak;
 
-        PaketPengadaan::create($validated);
+        $paket = PaketPengadaan::create($validated);
+
+        if ($request->user()) {
+            ProgresPekerjaan::create([
+                'paket_id' => $paket->id,
+                'user_id' => $request->user()->id,
+                'progress' => (int) $validated['progress'],
+                'status' => $validated['status'],
+                'catatan' => 'Pendaftaran paket pengadaan baru oleh Administrator LPSE.',
+            ]);
+        }
+
         return redirect()->route('paket.index')->with('success', 'Paket pengadaan berhasil ditambahkan.');
     }
 
@@ -132,7 +144,21 @@ class PaketController extends Controller
         $validated['hps'] = empty($request->hps) ? 0 : $request->hps;
         $validated['nilai_kontrak'] = empty($request->nilai_kontrak) ? 0 : $request->nilai_kontrak;
 
+        $statusBerubah = $paket->status !== $validated['status'];
+        $progressBerubah = (int) $paket->progress !== (int) $validated['progress'];
+
         $paket->update($validated);
+
+        if (($statusBerubah || $progressBerubah) && $request->user()) {
+            ProgresPekerjaan::create([
+                'paket_id' => $paket->id,
+                'user_id' => $request->user()->id,
+                'progress' => (int) $validated['progress'],
+                'status' => $validated['status'],
+                'catatan' => 'Pembaruan data paket oleh Administrator LPSE' . ($request->filled('keterangan') ? ': ' . $request->keterangan : '.'),
+            ]);
+        }
+
         return redirect()->route('paket.show', $paket)->with('success', 'Paket berhasil diperbarui.');
     }
 

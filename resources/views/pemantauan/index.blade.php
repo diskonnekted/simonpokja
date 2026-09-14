@@ -58,6 +58,10 @@
                                     {{ $p->nama_paket }}
                                 </a>
                                 <small class="text-secondary">{{ $p->kode_paket }} &bull; {{ $p->opd->singkatan ?? '-' }} &bull; {{ format_rupiah_singkat($p->pagu) }}</small>
+                                <div class="mt-1">
+                                    <span class="badge text-bg-{{ status_badge_class($p->status) }}" style="font-size: 0.68rem;">{{ $p->status_label }}</span>
+                                    <small class="text-secondary ms-1" style="font-size: 0.72rem;"><i class="bi bi-arrow-right-short text-primary"></i>{{ $p->next_action }}</small>
+                                </div>
                             </td>
                             <td data-label="Pokja"><small>{{ $p->pokja->nama ?? '-' }}</small></td>
                             <td class="text-center" data-label="Perubahan">
@@ -87,19 +91,20 @@
                                 @endif
                             </td>
                             <td data-label="Risiko">
-                                <span class="badge text-bg-{{ ['rendah' => 'success', 'sedang' => 'warning text-dark', 'kritis' => 'danger'][$p->risiko] }}">{{ ucfirst($p->risiko) }}</span>
-                                @if ($p->tender_gagal) <i class="bi bi-x-octagon text-danger" title="Tender gagal"></i>@endif
+                                <span class="badge badge-risiko-{{ $p->risiko }}">{{ ucfirst($p->risiko) }}</span>
+                                @if ($p->tender_gagal) <i class="bi bi-x-octagon text-danger ms-1" title="Tender gagal"></i>@endif
                             </td>
                             <td class="pe-3 text-center" data-label="Skor">
-                                <span class="badge {{ $p->skor_masalah >= 5 ? 'text-bg-danger' : ($p->skor_masalah >= 3 ? 'text-bg-warning text-dark' : 'text-bg-secondary') }}">
+                                <span class="badge {{ $p->skor_masalah >= 5 ? 'text-bg-danger' : ($p->skor_masalah >= 3 ? 'text-bg-warning' : 'text-bg-secondary') }}">
                                     {{ $p->skor_masalah }}
                                 </span>
                             </td>
                         </tr>
                     @empty
                         <tr><td colspan="7" class="text-center text-secondary py-5">
-                            <i class="bi bi-emoji-smile fs-1 d-block mb-2 text-success"></i>
-                            Tidak ada paket bermasalah pada filter ini
+                            <i class="bi bi-shield-check fs-1 d-block mb-2 text-success"></i>
+                            <div class="fw-semibold text-dark mb-1">Tidak Ada Paket Bermasalah Terdeteksi</div>
+                            <small class="text-secondary">Seluruh paket pengadaan berjalan sesuai jadwal, tanpa anomali jam kerja, tanpa BA tertunda, dan tidak ada sanggahan kritis.</small>
                         </td></tr>
                     @endforelse
                 </tbody>

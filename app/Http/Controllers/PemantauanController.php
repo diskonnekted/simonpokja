@@ -65,12 +65,78 @@ class PemantauanController extends Controller
     // ===== DETAIL PEMANTAUAN PAKET: JADWAL & SANGGAHAN =====
     public function show(PaketPengadaan $paket)
     {
-        $paket->load(['pokja', 'opd', 'penyedia', 'perubahanJadwals', 'sanggahans.penyedia']);
+        $paket->load(['pokja', 'opd', 'penyedia', 'perubahanJadwals', 'sanggahans.penyedia', 'progresPekerjaans.user']);
 
         $perubahans = $paket->perubahanJadwals()->orderByDesc('tanggal')->get();
         $sanggahans = $paket->sanggahans()->orderByDesc('tanggal_masuk')->get();
+        $progresPekerjaans = $paket->progresPekerjaans()->orderByDesc('created_at')->get();
 
-        return view('pemantauan.show', compact('paket', 'perubahans', 'sanggahans'));
+        // Bangun kronologi terpadu (unified timeline)
+        $timeline = collect();
+
+        // 1. Event Pembuatan Paket
+        if ($paket->created_at) {
+            $timeline->push([
+                'tipe' => 'paket_dibuat',
+                'tipe_label' => 'Paket Terdaftar',
+                'ikon' => 'bi-file-earmark-plus',
+                'marker' => 'marker-info',
+                'tanggal' => $paket->created_at,
+                'judul' => 'Paket Pengadaan Didaftarkan',
+                'deskripsi' => "Paket didaftarkan oleh " . ($paket->opd?->nama ?? 'Perangkat Daerah') . " dengan pagu " . format_rupiah($paket->pagu),
+                'badge' => 'primary',
+            ]);
+        }
+
+        // 2. Event Perubahan Jadwal
+        foreach ($perubahans as $pj) {
+            $isDanger = !$pj->ada_berita_acara || ($pj->jam && substr($pj->jam, 0, 5) >= '16:00');
+            $tgl = $pj->tanggal ? \Carbon\Carbon::parse($pj->tanggal->format('Y-m-d') . ' ' . ($pj->jam ?? '00:00:00')) : $pj->created_at;
+            $timeline->push([
+                'tipe' => 'perubahan_jadwal',
+                'tipe_label' => 'Perubahan Jadwal',
+                'ikon' => 'bi-calendar-event',
+                'marker' => $isDanger ? 'marker-danger' : 'marker-warning',
+                'tanggal' => $tgl,
+                'judul' => ucfirst($pj->jenis) . ($pj->tahap_terkait ? " ({$pj->tahap_terkait})" : ''),
+                'deskripsi' => ($pj->alasan ?: 'Penyesuaian jadwal pengadaan') . ($pj->ada_berita_acara ? ' &bull; Dilengkapi BA' : ' &bull; <strong class="text-danger">Tanpa Berita Acara</strong>'),
+                'badge' => $isDanger ? 'danger' : 'warning',
+            ]);
+        }
+
+        // 3. Event Sanggahan
+        foreach ($sanggahans as $sg) {
+            $isKritis = $sg->status === 'menunggu';
+            $timeline->push([
+                'tipe' => 'sanggahan',
+                'tipe_label' => 'Sanggahan',
+                'ikon' => 'bi-flag-fill',
+                'marker' => $isKritis ? 'marker-danger' : 'marker-info',
+                'tanggal' => $sg->tanggal_masuk ?? $sg->created_at,
+                'judul' => "Sanggahan: " . ($sg->penyedia?->nama ?: 'Penyedia'),
+                'deskripsi' => ($sg->materi_singkat ?: 'Sanggahan pengadaan') . " &bull; Status: " . ucfirst($sg->status),
+                'badge' => $isKritis ? 'danger' : 'success',
+            ]);
+        }
+
+        // 4. Event Progres Pekerjaan
+        foreach ($progresPekerjaans as $prog) {
+            $isSelesai = $prog->status === 'selesai' || $prog->progress >= 100;
+            $timeline->push([
+                'tipe' => 'progres',
+                'tipe_label' => 'Update Progres',
+                'ikon' => $isSelesai ? 'bi-check-circle-fill' : 'bi-arrow-repeat',
+                'marker' => $isSelesai ? 'marker-success' : 'marker-info',
+                'tanggal' => $prog->created_at,
+                'judul' => "Progres {$prog->progress}% — Status: " . ucfirst($prog->status),
+                'deskripsi' => ($prog->catatan ?: 'Pembaruan progres berkala') . ($prog->user ? " (oleh: {$prog->user->name})" : ''),
+                'badge' => $isSelesai ? 'success' : 'primary',
+            ]);
+        }
+
+        $timeline = $timeline->sortByDesc('tanggal')->values();
+
+        return view('pemantauan.show', compact('paket', 'perubahans', 'sanggahans', 'timeline'));
     }
 
     // ===== CATAT PERUBAHAN JADWAL =====
@@ -101,6 +167,16 @@ class PemantauanController extends Controller
                     'deskripsi' => "{$paket->kode_paket}: Pengunduran/perubahan jadwal {$jumlah}x — melebihi ambang SLA.",
                 ]
             );
+
+            // Notifikasi kritis EWS
+            try {
+                $ns = app(\App\Services\NotificationService::class);
+                $msg = "{$paket->kode_paket}: Pengunduran jadwal {$jumlah}x — melebihi ambang SLA.";
+                if ($paket->pokja_id) {
+                    $ns->kirimKePokja($paket->pokja_id, 'Peringatan Kritis EWS', $msg, route('pemantauan.show', $paket), 'anomali', 'critical');
+                }
+                $ns->kirimKeAdmin('Peringatan Kritis EWS', $msg, route('pemantauan.show', $paket), 'anomali', 'critical');
+            } catch (\Throwable $e) {}
         } elseif (!$validated['ada_berita_acara']) {
             AlertAnomali::firstOrCreate(
                 ['paket_id' => $paket->id, 'jenis' => 'tanpa_ba', 'status' => 'aktif'],
@@ -110,6 +186,14 @@ class PemantauanController extends Controller
                     'deskripsi' => "{$paket->kode_paket}: Perubahan jadwal tanpa Berita Acara resmi.",
                 ]
             );
+
+            try {
+                $ns = app(\App\Services\NotificationService::class);
+                $msg = "{$paket->kode_paket}: Perubahan jadwal dilakukan tanpa Berita Acara resmi.";
+                if ($paket->pokja_id) {
+                    $ns->kirimKePokja($paket->pokja_id, 'Peringatan EWS (Tanpa BA)', $msg, route('pemantauan.show', $paket), 'anomali', 'warning');
+                }
+            } catch (\Throwable $e) {}
         }
 
         return back()->with('success', 'Perubahan jadwal tercatat.');
@@ -129,6 +213,20 @@ class PemantauanController extends Controller
         $validated['substantif'] = $request->hasil != 'menunggu';
 
         Sanggahan::create($validated);
+
+        // Notifikasi ke Pokja penangan tentang sanggahan rekanan
+        try {
+            if ($paket->pokja_id) {
+                app(\App\Services\NotificationService::class)->kirimKePokja(
+                    $paket->pokja_id,
+                    'Sanggahan Rekanan Masuk',
+                    "{$paket->kode_paket}: Sanggahan baru diterima. Batas waktu SLA tanggapan 3 hari kerja.",
+                    route('pemantauan.show', $paket),
+                    'sanggahan',
+                    'warning'
+                );
+            }
+        } catch (\Throwable $e) {}
 
         // Auto-alert jika tidak dijawab tepat waktu (cek saat hasil masih menunggu >3 hari)
         if ($validated['hasil'] == 'menunggu' && now()->diffInDays($validated['tanggal_masuk']) > 3) {
