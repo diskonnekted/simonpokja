@@ -1,0 +1,506 @@
+{
+  "info": {
+    "_postman_id": "f7c1e2d4-9a3b-4c5d-8e6f-1a2b3c4d5e6f",
+    "name": "SIMONPOKJA API (v1) — Integrasi SIBIJAK",
+    "description": "Koleksi request untuk REST API SIMONPOKJA (Monitoring Kinerja Pokja LPSE Kab. Banjarnegara).\n\n• Base URL : {{baseUrl}}\n• Autentikasi: Bearer token (variabel {{token}}), otomatis dipasang di seluruh request.\n• Dokumentasi lengkap: docs/API.md\n• Catatan: seluruh endpoint bersifat READ-ONLY (GET).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8081/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "1f43b0b8fb3157c4e6512baa3d94bc22f3226bade52271ec042d399a8d7788e7",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health",
+      "description": "Uji koneksi dan validitas token.",
+      "item": [
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Mengembalikan informasi aplikasi & waktu server. Gunakan untuk memvalidasi token.",
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": ["{{baseUrl}}"],
+              "path": ["ping"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Master Data",
+      "description": "Data referensi: OPD, Pokja (dengan indikator kinerja), dan Penyedia.",
+      "item": [
+        {
+          "name": "Daftar OPD",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Daftar OPD. Filter opsional: q (cari nama/kode/singkatan), per_page.",
+            "url": {
+              "raw": "{{baseUrl}}/opd?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["opd"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detail OPD",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Detail satu OPD beserta jumlah paket.",
+            "url": {
+              "raw": "{{baseUrl}}/opd/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["opd", ":id"],
+              "variable": [
+                { "key": "id", "value": "19", "description": "ID OPD" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Daftar Pokja (kinerja)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Daftar Pokja + indikator kinerja (beban kerja, SLA, risiko, dll). Filter opsional: aktif (1/0), q.",
+            "url": {
+              "raw": "{{baseUrl}}/pokja",
+              "host": ["{{baseUrl}}"],
+              "path": ["pokja"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detail Pokja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Detail Pokja beserta daftar paket yang ditangani.",
+            "url": {
+              "raw": "{{baseUrl}}/pokja/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pokja", ":id"],
+              "variable": [
+                { "key": "id", "value": "1", "description": "ID Pokja (1-5)" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Daftar Penyedia",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Daftar penyedia. Filter opsional: q, jenis_usaha, kualifikasi, per_page.",
+            "url": {
+              "raw": "{{baseUrl}}/penyedia?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["penyedia"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detail Penyedia",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Detail satu penyedia.",
+            "url": {
+              "raw": "{{baseUrl}}/penyedia/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["penyedia", ":id"],
+              "variable": [
+                { "key": "id", "value": "11", "description": "ID penyedia" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Paket Pengadaan",
+      "description": "Data paket pengadaan beserta seluruh data turunannya.",
+      "item": [
+        {
+          "name": "Daftar Paket (filter)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Daftar paket + pagination. Filter: tahun, status, jenis, metode, sumber_dana, risiko, opd_id, pokja_id, penyedia_id, tender_gagal, q, dari, sampai, sort, order, per_page, page.\n\nContoh enum status: draft, persiapan, pemilihan, kontrak, pelaksanaan, selesai, batal.",
+            "url": {
+              "raw": "{{baseUrl}}/paket?tahun=2026&per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket"],
+              "query": [
+                { "key": "tahun", "value": "2026" },
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detail Paket (lengkap)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Detail paket + seluruh data turunan (tahapan, evaluasi, sanggahan, progres, perubahan jadwal, pesan, alert, audit checklist) + ringkasan jumlah.",
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id"],
+              "variable": [
+                { "key": "id", "value": "94", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tahapan Paket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id/tahapan",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id", "tahapan"],
+              "variable": [
+                { "key": "id", "value": "94", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Evaluasi Paket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id/evaluasi",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id", "evaluasi"],
+              "variable": [
+                { "key": "id", "value": "94", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sanggahan Paket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id/sanggahan",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id", "sanggahan"],
+              "variable": [
+                { "key": "id", "value": "94", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Progres Pekerjaan Paket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id/progres",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id", "progres"],
+              "variable": [
+                { "key": "id", "value": "94", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Perubahan Jadwal Paket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id/perubahan-jadwal",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id", "perubahan-jadwal"],
+              "variable": [
+                { "key": "id", "value": "93", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pesan Paket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id/pesan",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id", "pesan"],
+              "variable": [
+                { "key": "id", "value": "94", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alert Anomali Paket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paket/:id/alert",
+              "host": ["{{baseUrl}}"],
+              "path": ["paket", ":id", "alert"],
+              "variable": [
+                { "key": "id", "value": "94", "description": "ID paket pengadaan" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Monitoring (global)",
+      "description": "Data monitoring lintas paket. Semua endpoint mendukung pagination (per_page, page).",
+      "item": [
+        {
+          "name": "Semua Tahapan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, status.",
+            "url": {
+              "raw": "{{baseUrl}}/tahapan?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["tahapan"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Semua Evaluasi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, penyedia_id, jenis, hasil.",
+            "url": {
+              "raw": "{{baseUrl}}/evaluasi?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluasi"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Semua Sanggahan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, penyedia_id, hasil, substantif.",
+            "url": {
+              "raw": "{{baseUrl}}/sanggahan?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["sanggahan"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Semua Progres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, user_id.",
+            "url": {
+              "raw": "{{baseUrl}}/progres?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["progres"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Semua Alert Anomali",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, pokja_id, tingkat, status.",
+            "url": {
+              "raw": "{{baseUrl}}/alert?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["alert"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Semua Perubahan Jadwal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, jenis.",
+            "url": {
+              "raw": "{{baseUrl}}/perubahan-jadwal?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["perubahan-jadwal"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Semua Pesan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, user_id.",
+            "url": {
+              "raw": "{{baseUrl}}/pesan?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["pesan"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Audit Checklist",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: paket_id, pokja_id, kategori, jawaban.",
+            "url": {
+              "raw": "{{baseUrl}}/audit-checklist?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit-checklist"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Audit Log (jejak)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Filter: tabel, aksi, user_id, dari, sampai.",
+            "url": {
+              "raw": "{{baseUrl}}/audit-log?per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit-log"],
+              "query": [
+                { "key": "per_page", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Agregat",
+      "description": "Data agregat/ringkasan siap untuk dashboard.",
+      "item": [
+        {
+          "name": "Statistik",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Agregat ringkas (total paket, pagu, breakdown status/jenis/risiko, sanggahan, alert, dll). Opsional ?tahun=2026.",
+            "url": {
+              "raw": "{{baseUrl}}/statistik?tahun=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["statistik"],
+              "query": [
+                { "key": "tahun", "value": "2026" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Kinerja Pokja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Ringkasan kinerja seluruh Pokja. Opsional ?aktif=1.",
+            "url": {
+              "raw": "{{baseUrl}}/kinerja-pokja",
+              "host": ["{{baseUrl}}"],
+              "path": ["kinerja-pokja"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

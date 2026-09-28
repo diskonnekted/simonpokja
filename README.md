@@ -177,6 +177,107 @@ php artisan db:seed --class=SirupDummySeeder --force      # Paket dummy berkode 
 php artisan serve                                         # Server pengembangan
 ```
 
+## API Integrasi (SIBIJAK)
+
+SIMONPOKJA menyediakan REST API berformat JSON agar datanya dapat dikonsumsi aplikasi lain (SIBIJAK).
+
+> 📘 **Dokumentasi lengkap** (detail endpoint, contoh respons, kamus enum, contoh integrasi)
+> tersedia di [`docs/API.md`](docs/API.md).
+
+### Autentikasi
+
+Setiap permintaan memakai token bearer yang diatur pada `.env`:
+
+```env
+SIBIJAK_API_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+CORS_ALLOWED_ORIGINS=http://127.0.0.1:8086,http://localhost:8086
+```
+
+Kirim token melalui header `Authorization: Bearer <token>` (atau parameter `?token=` untuk pengujian cepat). Tanpa token, API mengembalikan `401` dengan pesan JSON.
+
+### URL Dasar
+
+```
+http://<host>:<port>/api/v1
+```
+
+### Daftar Endpoint
+
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| GET | `/ping` | Uji koneksi & validitas token |
+| GET | `/opd` | Daftar OPD (filter `q`, `per_page`) |
+| GET | `/opd/{id}` | Detail OPD |
+| GET | `/pokja` | Daftar Pokja + indikator kinerja (filter `aktif`, `q`) |
+| GET | `/pokja/{id}` | Detail Pokja + daftar paketnya |
+| GET | `/penyedia` | Daftar penyedia (filter `q`, `jenis_usaha`, `kualifikasi`) |
+| GET | `/penyedia/{id}` | Detail penyedia |
+| GET | `/paket` | Daftar paket pengadaan (lihat filter di bawah) |
+| GET | `/paket/{id}` | Detail paket + seluruh data turunan |
+| GET | `/paket/{id}/tahapan` | Tahapan proses paket |
+| GET | `/paket/{id}/evaluasi` | Evaluasi peserta paket |
+| GET | `/paket/{id}/sanggahan` | Sanggahan terhadap paket |
+| GET | `/paket/{id}/progres` | Riwayat progres pekerjaan paket |
+| GET | `/paket/{id}/perubahan-jadwal` | Riwayat perubahan jadwal paket |
+| GET | `/paket/{id}/pesan` | Pesan antar pengguna pada paket |
+| GET | `/paket/{id}/alert` | Alert anomali pada paket |
+| GET | `/tahapan` | Seluruh tahapan (filter `paket_id`, `status`) |
+| GET | `/evaluasi` | Seluruh evaluasi (filter `paket_id`, `penyedia_id`, `jenis`, `hasil`) |
+| GET | `/sanggahan` | Seluruh sanggahan (filter `paket_id`, `penyedia_id`, `hasil`, `substantif`) |
+| GET | `/progres` | Seluruh progres (filter `paket_id`, `user_id`) |
+| GET | `/alert` | Seluruh alert anomali (filter `paket_id`, `pokja_id`, `tingkat`, `status`) |
+| GET | `/perubahan-jadwal` | Seluruh perubahan jadwal (filter `paket_id`, `jenis`) |
+| GET | `/pesan` | Seluruh pesan (filter `paket_id`, `user_id`) |
+| GET | `/audit-checklist` | Checklist audit (filter `paket_id`, `pokja_id`, `kategori`, `jawaban`) |
+| GET | `/audit-log` | Rekam jejak audit (filter `tabel`, `aksi`, `user_id`, `dari`, `sampai`) |
+| GET | `/statistik` | Agregat ringkas (opsional `?tahun=`) |
+| GET | `/kinerja-pokja` | Ringkasan kinerja seluruh Pokja |
+
+### Filter Endpoint `/paket`
+
+| Parameter | Keterangan |
+|---|---|
+| `tahun` | Tahun anggaran |
+| `status` | draft, persiapan, pemilihan, kontrak, pelaksanaan, selesai, batal |
+| `jenis` | barang, konstruksi, jasa_konsultansi, jasa_lainnya |
+| `metode` | tender, non_tender, epurchasing, swakelola |
+| `sumber_dana` | apbd, dana_transfer, apbn, lainnya, dak |
+| `risiko` | rendah, sedang, kritis |
+| `opd_id` / `pokja_id` / `penyedia_id` | Filter relasi |
+| `tender_gagal` | `1`/`0` |
+| `q` | Cari nama/kode paket |
+| `dari` / `sampai` | Rentang `tanggal_mulai` |
+| `sort` / `order` | Kolom sortir & arah (`asc`/`desc`) |
+| `per_page` | Jumlah per halaman (1–100, default 15) |
+
+### Contoh Permintaan
+
+```bash
+# Cek koneksi
+curl -H "Authorization: Bearer <token>" http://127.0.0.1:8081/api/v1/ping
+
+# Paket tahun 2026 status kontrak (2 item per halaman)
+curl -H "Authorization: Bearer <token>" \
+  "http://127.0.0.1:8081/api/v1/paket?tahun=2026&status=kontrak&per_page=2"
+
+# Statistik agregat
+curl -H "Authorization: Bearer <token>" "http://127.0.0.1:8081/api/v1/statistik?tahun=2026"
+```
+
+### Format Respons
+
+Respons sukses memakai envelope `{ success, message, data }`. Endpoint terpaginasi menambahkan `meta` dan `links`:
+
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": [ ... ],
+  "meta": { "current_page": 1, "per_page": 15, "total": 26, "last_page": 2 },
+  "links": { "first": "...", "last": "...", "prev": null, "next": "..." }
+}
+```
+
 ## Lisensi
 
 Aplikasi ini dikembangkan untuk kebutuhan internal Pemerintah Kabupaten Banjarnegara.
